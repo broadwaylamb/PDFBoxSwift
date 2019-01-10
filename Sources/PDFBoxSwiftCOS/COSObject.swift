@@ -49,6 +49,7 @@ public final class COSObject: COSBase, COSUpdateInfo {
     self.generationNumber = generationNumber
   }
 
+  @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try object.accept(visitor: visitor)
   }

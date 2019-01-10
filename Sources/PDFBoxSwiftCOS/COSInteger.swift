@@ -70,6 +70,7 @@ public final class COSInteger: COSNumber {
     return value
   }
 
+  @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try visitor.visit(self)
   }

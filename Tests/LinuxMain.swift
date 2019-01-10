@@ -3,5 +3,6 @@ import XCTest
 import PDFBoxSwiftCOSTests
 
 var tests = [XCTestCaseEntry]()
-tests += PDFBoxSwiftCOS.allTests()
+tests += PDFBoxSwiftCOSTests.allTests()
+
 XCTMain(tests)

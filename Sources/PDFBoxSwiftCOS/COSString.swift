@@ -76,50 +76,35 @@ public final class COSString: COSBase {
     let isOnlyPDFDocEncoding = text.utf16
       .allSatisfy(PDFDocEncoding.containsChar)
 
+    bytes = []
+
+    super.init()
+
     if isOnlyPDFDocEncoding {
-      bytes = text.pdfDocEncoded()
+      let repaired = transcode(text.utf16.makeIterator(),
+                               from: UTF16.self,
+                               to: PDFDocEncoding.self,
+                               stoppingOnError: false,
+                               into: { bytes.append($0) })
+      assert(!repaired)
     } else {
       // UTF-16BE encoded string with a leading byte order marker
-      bytes = []
-      let utf16 = text.utf16
+      let utf16 = text.utf16BigEndian
       bytes.reserveCapacity(2 + utf16.count)
       bytes.append(contentsOf: [0xFE, 0xFF]) // BOM
       bytes.append(contentsOf: utf16.lazy.flatMap { codeUnit -> [UInt8] in
         let be = codeUnit.bigEndian
-        return [UInt8((be & 0xFF00) >> 8), UInt8(be & 0xFF00)]
+        return [UInt8((be & 0xFF00) >> 8), UInt8(be & 0xFF)]
       })
     }
   }
 
   /// Returns the content of this string as a PDF *text string*.
+  ///
+  /// - Complexity: O(n)
   public func string() -> String {
-
-    // text string - BOM indicates Unicode
-    if bytes.count >= 2 {
-      if bytes[0] == 0xFE && bytes[1] == 0xFF {
-        // UTF-16BE
-        return bytes.dropFirst(2).withUnsafeBytes { raw in
-          String(
-            decoding: raw.bindMemory(to: UInt16.self)
-              .lazy
-              .map { $0.bigEndian },
-            as: UTF16.self
-          )
-        }
-      } else if bytes[0] == 0xFF && bytes[1] == 0xFE {
-        // UTF-16LE
-        return bytes.dropFirst(2).withUnsafeBytes { raw in
-          String(
-            decoding: raw.bindMemory(to: UInt16.self)
-              .lazy
-              .map { $0.littleEndian },
-            as: UTF16.self
-          )
-        }
-      }
-    }
-
-    return String(decoding: bytes, as: PDFDocEncoding.self)
+    return String(utf16ParsingBOM: bytes)
+      ?? String(decoding: bytes, as: PDFDocEncoding.self)
   }
 
   /// Returns the content of this string as a PDF *ASCII string*.
@@ -132,12 +117,10 @@ public final class COSString: COSBase {
   ///
   /// - Returns: A hex string representing the bytes in this string.
   public func hexString() -> String {
-    return String(bytes.flatMap { byte -> String in
-      String(decoding: [0x30 + (byte & 0xF0) >> 4, 0x30 + byte & 0x0F],
-             as: UTF8.self)
-    })
+    return String(hexRepresentationOf: bytes)
   }
 
+  @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try visitor.visit(self)
   }

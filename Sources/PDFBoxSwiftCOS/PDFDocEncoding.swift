@@ -100,37 +100,47 @@ internal enum PDFDocEncoding {
   }
 }
 
-extension String {
-  internal init<C: Collection>(decoding codeUnits: C, as: PDFDocEncoding.Type)
-      where C.Element == UInt8 {
+extension PDFDocEncoding: Unicode.Encoding {
 
-    var string = String()
-    string.reserveCapacity(codeUnits.count)
-    for byte in codeUnits {
-      let byte = byte & 0xFF
-      if byte >= PDFDocEncoding.codeToUTF16.count {
-        string.append("?")
-      } else {
-        string.unicodeScalars
-          .append(UnicodeScalar(PDFDocEncoding.codeToUTF16[Int(byte)])!)
-      }
-    }
+  typealias ForwardParser = Parser
 
-    self = string
+  typealias ReverseParser = Parser
+
+  typealias CodeUnit = UInt8
+
+  typealias EncodedScalar = CollectionOfOne<CodeUnit>
+
+  static let encodedReplacementCharacter = EncodedScalar(0x3F)
+
+  static func decode(_ content: EncodedScalar) -> UnicodeScalar {
+    return UnicodeScalar(codeToUTF16[Int(content[content.startIndex])])!
   }
 
-  internal func pdfDocEncoded() -> [UInt8] {
+  static func encode(_ content: UnicodeScalar) -> EncodedScalar? {
 
-    var bytes = [UInt8]()
+    let utf16 = content.utf16
 
-    for codeUnit in utf16 {
-      if let code = PDFDocEncoding.utf16ToCode[codeUnit] {
-        bytes.append(code)
-      } else {
-        bytes.append(0)
-      }
+    guard utf16.count == 1 else {
+      return nil
     }
 
-    return bytes
+    return utf16ToCode[utf16.first!].map(EncodedScalar.init)
+  }
+
+  struct Parser: Unicode.Parser {
+
+    typealias Encoding = PDFDocEncoding
+
+    init() {}
+
+    mutating func parseScalar<I>(
+      from input: inout I
+    ) -> Unicode.ParseResult<EncodedScalar>
+        where I : IteratorProtocol, I.Element == UInt8 {
+          return input
+            .next()
+            .map(EncodedScalar.init)
+            .map(Unicode.ParseResult.valid) ?? .emptyInput
+    }
   }
 }

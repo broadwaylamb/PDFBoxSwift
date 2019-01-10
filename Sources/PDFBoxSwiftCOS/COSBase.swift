@@ -27,6 +27,7 @@ public class COSBase: COSObjectConvertible, Hashable {
   ///
   /// - Parameter visitor: The object to notify when visiting this object.
   /// - Returns: Any object, depending on the visitor implementation, or `nil`.
+  @discardableResult
   public func accept(visitor: COSVisitorProtocol) throws -> Any? {
     COSBase.requiresConcreteImplementation()
   }

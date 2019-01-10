@@ -17,6 +17,7 @@ public final class COSNull: COSBase {
     super.init()
   }
 
+  @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any?  {
     return try visitor.visit(self)
   }

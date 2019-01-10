@@ -11,7 +11,10 @@ let package = Package(
   ],
   targets: [
     .target(name: "PDFBoxSwiftIO"),
-    .target(name: "PDFBoxSwiftCOS", dependencies: ["PDFBoxSwiftIO"]),
+    .target(name: "PDFBoxSwiftCOS",
+            dependencies: ["PDFBoxSwiftIO"]),
+    .target(name: "PDFBoxSwiftPDFWriter",
+            dependencies: ["PDFBoxSwiftCOS, PDFBoxSwiftIO"]),
     .testTarget(name: "PDFBoxSwiftCOSTests",
                 dependencies: ["PDFBoxSwiftCOS"]),
     ]

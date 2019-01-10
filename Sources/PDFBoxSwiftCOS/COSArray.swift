@@ -19,6 +19,7 @@ public final class COSArray: COSBase, COSUpdateInfo {
     super.init()
   }
 
+  @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try visitor.visit(self)
   }

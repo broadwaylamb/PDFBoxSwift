@@ -74,6 +74,7 @@ public final class COSFloat: COSNumber {
     hasher.combine(stringValue)
   }
 
+  @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try visitor.visit(self)
   }

@@ -40,6 +40,7 @@ public final class COSName: COSBase {
     return name.isEmpty
   }
 
+  @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try visitor.visit(self)
   }
@@ -70,7 +71,7 @@ public final class COSName: COSBase {
         try output.write(byte: byte)
       } else {
         try output.write(byte: 0x23) // '#'
-        try output.writeAsHex(byte: byte)
+        try output.writeAsHex(byte)
       }
     }
   }

@@ -31,6 +31,7 @@ public final class COSBoolean: COSBase {
     return value ? .true : .false
   }
 
+  @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try visitor.visit(self)
   }
