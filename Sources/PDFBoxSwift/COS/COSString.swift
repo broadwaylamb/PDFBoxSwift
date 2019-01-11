@@ -21,7 +21,7 @@
 /// Byte strings are used for binary data represented as a series of bytes, but
 /// the encoding is not known. The bytes of the string need not represent
 /// characters.
-public final class COSString: COSBase {
+public final class COSString: COSBase, ConvertibleToCOS {
 
   public struct ParseError: Error, CustomStringConvertible {
     public let description: String
@@ -133,6 +133,10 @@ public final class COSString: COSBase {
   public override func hash(into hasher: inout Hasher) {
     hasher.combine(bytes)
     hasher.combine(forceHexForm)
+  }
+
+  public var cosRepresentation: COSString {
+    return self
   }
 }
 

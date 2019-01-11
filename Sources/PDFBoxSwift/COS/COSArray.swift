@@ -6,7 +6,7 @@
 //
 
 /// An array of `COSBase` objects as part of the PDF document.
-public final class COSArray: COSBase, COSUpdateInfo {
+public final class COSArray: COSBase, COSUpdateInfo, ConvertibleToCOS {
 
   private private(set) var objects: [COSBase] = []
 
@@ -22,6 +22,10 @@ public final class COSArray: COSBase, COSUpdateInfo {
   @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try visitor.visit(self)
+  }
+
+  public var cosRepresentation: COSArray {
+    return self
   }
 }
 
@@ -122,8 +126,8 @@ extension COSArray: RangeReplaceableCollection {
     objects.append(newElement ?? COSNull.null)
   }
 
-  public func append(_ newElement: COSObjectConvertible) throws {
-    try objects.append(newElement.getCOSObject())
+  public func append<T: COSObjectable>(_ newElement: T) {
+    objects.append(newElement.cosObject)
   }
 
   public func append<S: Sequence>(contentsOf newElements: S)
@@ -170,8 +174,8 @@ extension COSArray {
   ///   - object: The object to set.
   ///   - index: The index of the array.
   /// - Throws: Any error thrown by the `try object?.getCOSObject()` call.
-  public func set(_ object: COSObjectConvertible?, at index: Index) throws {
-    self[index] = try object?.getCOSObject()
+  public func set<T: COSObjectable>(_ object: T?, at index: Index) {
+    self[index] = object?.cosObject
   }
 
   /// Set the value in the array as a name.

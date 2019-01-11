@@ -6,7 +6,7 @@
 //
 
 /// The base object that all objects in the PDF document will extend.
-public class COSBase: COSObjectConvertible, Hashable {
+public class COSBase: COSObjectable, Hashable {
 
   /// If the state is `true`, the dictionary will be written direct
   /// into the called object.
@@ -16,10 +16,8 @@ public class COSBase: COSObjectConvertible, Hashable {
   /// Constructor.
   internal init() {}
 
-  /// Convert this object to a COS object.
-  ///
-  /// - Returns: The COS object that matches this object.
-  public func getCOSObject() throws -> COSBase {
+  /// /// Convert this object to a COS object.
+  public var cosObject: COSBase {
     return self
   }
 

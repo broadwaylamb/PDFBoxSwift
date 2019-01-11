@@ -6,7 +6,7 @@
 //
 
 /// This class represents an integer number in a PDF document.
-public final class COSInteger: COSNumber {
+public final class COSInteger: COSNumber, ConvertibleToCOS {
 
   /// The lowest integer to be kept in the `staticInts` array.
   private static let low = -100
@@ -79,6 +79,10 @@ public final class COSInteger: COSNumber {
   /// - Throws: Any error the stream throws during writing.
   public func writePDF(_ output: OutputStream) throws {
     try output.writeUTF8(String(value))
+  }
+
+  public var cosRepresentation: COSInteger {
+    return self
   }
 }
 
