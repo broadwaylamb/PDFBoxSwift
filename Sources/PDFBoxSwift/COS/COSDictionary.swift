@@ -241,7 +241,7 @@ extension COSDictionary {
   ///
   /// - Parameter key: The key to the object that we are getting.
   /// - Returns: The object that matches the key.
-  public subscript<T>(cos key: TypedCOSName<T>) -> T.ToCOS? {
+  public subscript<T: ConvertibleToCOS>(cos key: TypedCOSName<T>) -> T.ToCOS? {
     get {
       return self[key.key] as? T.ToCOS
     }
@@ -329,7 +329,7 @@ extension COSDictionary {
   ///   - firstKey: The first key to the item in the dictionary.
   ///   - secondKey: The second key to the item in the dictionary.
   /// - Returns: The object that matches the key.
-  public subscript<T>(
+  public subscript<T: ConvertibleToCOS>(
     cos firstKey: TypedCOSName<T>,
     secondKey: TypedCOSName<T>
   ) -> T.ToCOS? {
