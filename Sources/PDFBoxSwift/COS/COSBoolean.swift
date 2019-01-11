@@ -5,8 +5,6 @@
 //  Created by Sergej Jaskiewicz on 09/01/2019.
 //
 
-import PDFBoxSwiftIO
-
 /// This class represents a boolean value in the PDF document.
 public final class COSBoolean: COSBase {
 

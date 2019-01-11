@@ -7,9 +7,7 @@
 
 import XCTest
 
-@testable import PDFBoxSwiftCOS
-import PDFBoxSwiftIO
-import PDFBoxSwiftPDFWriter
+@testable import PDFBoxSwift
 
 final class COSStringTests: XCTestCase {
 

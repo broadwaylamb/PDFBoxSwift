@@ -7,9 +7,7 @@
 
 import XCTest
 
-import PDFBoxSwiftCOS
-import PDFBoxSwiftPDFWriter
-import PDFBoxSwiftIO
+import PDFBoxSwift
 
 final class COSFloatTests: XCTestCase {
 

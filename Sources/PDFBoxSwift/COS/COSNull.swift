@@ -7,6 +7,7 @@
 
 import PDFBoxSwiftIO
 
+/// This class represents a null PDF object.
 public final class COSNull: COSBase {
 
   /// The one null object in the system.

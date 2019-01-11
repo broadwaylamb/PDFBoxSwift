@@ -5,8 +5,6 @@
 //  Created by Sergej Jaskiewicz on 09/01/2019.
 //
 
-import PDFBoxSwiftIO
-
 /// This class represents a floating point number in a PDF document.
 public final class COSFloat: COSNumber {
 

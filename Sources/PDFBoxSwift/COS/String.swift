@@ -5,8 +5,6 @@
 //  Created by Sergej Jaskiewicz on 09/01/2019.
 //
 
-import PDFBoxSwiftIO
-
 extension String {
 
   internal init<Bytes: Sequence>(hexRepresentationOf: Bytes)

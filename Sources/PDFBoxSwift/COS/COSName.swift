@@ -5,8 +5,7 @@
 //  Created by Sergej Jaskiewicz on 09/01/2019.
 //
 
-import PDFBoxSwiftIO
-
+/// This class represents a PDF Name object.
 public final class COSName: COSBase {
 
   public let name: String

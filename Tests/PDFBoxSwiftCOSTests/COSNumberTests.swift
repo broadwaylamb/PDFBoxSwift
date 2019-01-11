@@ -6,7 +6,8 @@
 //
 
 import XCTest
-import PDFBoxSwiftCOS
+
+import PDFBoxSwift
 
 final class COSNumberTests: XCTestCase {
 

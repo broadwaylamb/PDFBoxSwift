@@ -5,8 +5,6 @@
 //  Created by Sergej Jaskiewicz on 09/01/2019.
 //
 
-import PDFBoxSwiftIO
-
 /// This class represents an integer number in a PDF document.
 public final class COSInteger: COSNumber {
 

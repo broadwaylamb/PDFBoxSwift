@@ -5,6 +5,8 @@
 //  Created by Sergej Jaskiewicz on 10/01/2019.
 //
 
+/// Simple output stream with some minor features for generating
+/// "pretty" PDF files.
 public final class COSStandardOutputStream: FilterOutputStream {
 
   /// To be used when 2 byte sequence is enforced.

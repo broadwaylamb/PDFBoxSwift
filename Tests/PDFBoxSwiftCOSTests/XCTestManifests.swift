@@ -6,6 +6,8 @@ public func allTests() -> [XCTestCaseEntry] {
     testCase(COSNumberTests.allTests),
     testCase(COSIntegerTests.allTests),
     testCase(COSFloatTests.allTests),
+    testCase(COSNameTests.allTests),
+    testCase(COSStringTests.allTests),
     testCase(PDFDocEncodingTests.allTests),
   ]
 }

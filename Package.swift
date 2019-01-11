@@ -5,17 +5,12 @@ import PackageDescription
 let package = Package(
   name: "PDFBoxSwift",
   products: [
-    .library(name: "PDFBoxSwift", targets: ["PDFBoxSwiftCOS"]),
+    .library(name: "PDFBoxSwift", targets: ["PDFBoxSwift"]),
   ],
   dependencies: [
   ],
   targets: [
-    .target(name: "PDFBoxSwiftIO"),
-    .target(name: "PDFBoxSwiftCOS",
-            dependencies: ["PDFBoxSwiftIO"]),
-    .target(name: "PDFBoxSwiftPDFWriter",
-            dependencies: ["PDFBoxSwiftCOS, PDFBoxSwiftIO"]),
-    .testTarget(name: "PDFBoxSwiftCOSTests",
-                dependencies: ["PDFBoxSwiftCOS"]),
+    .target(name: "PDFBoxSwift"),
+    .testTarget(name: "PDFBoxSwiftCOSTests", dependencies: ["PDFBoxSwift"]),
     ]
 )

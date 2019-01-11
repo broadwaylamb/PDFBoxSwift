@@ -6,8 +6,8 @@
 //
 
 import XCTest
-import PDFBoxSwiftCOS
-import PDFBoxSwiftIO
+
+import PDFBoxSwift
 
 final class COSIntegerTests: XCTestCase {
 

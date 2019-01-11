@@ -5,9 +5,7 @@
 //  Created by Sergej Jaskiewicz on 10/01/2019.
 //
 
-import PDFBoxSwiftIO
-import PDFBoxSwiftCOS
-
+/// This class acts on an in-memory representation of a PDF document.
 public final class COSWriter: COSVisitorProtocol {
 
   // MARK: - Tokens

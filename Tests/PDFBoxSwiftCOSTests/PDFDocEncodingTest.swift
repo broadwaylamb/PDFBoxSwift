@@ -6,6 +6,7 @@
 //
 
 import XCTest
+
 import PDFBoxSwiftCOS
 
 final class PDFDocEncodingTests: XCTestCase {
