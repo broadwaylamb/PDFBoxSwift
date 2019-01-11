@@ -216,25 +216,25 @@ public final class COSWriter: COSVisitorProtocol {
     // EOL markers within a string are troublesome
     let isAscii = forceHex
       ? true
-      : bytes.allSatisfy { $0 <= 127 && $0 != 0x0D && $0 != 0x0A }
+      : bytes.allSatisfy { $0 <= 127 && $0 != "\r" && $0 != "\n" }
 
     if isAscii && !forceHex {
-      try output.write(byte: 0x28) // '('
+      try output.write(ascii: "(")
       for byte in bytes {
         switch byte {
-        case 0x28, 0x29, 0x5C:
-          try output.write(byte: 0x5C) // '\'
+        case "(", ")", "\\":
+          try output.write(ascii: "\\")
           try output.write(byte: byte)
         default:
           try output.write(byte: byte)
         }
       }
-      try output.write(byte: 0x29) // ')'
+      try output.write(ascii: ")")
     } else {
       // write hex string
-      try output.write(byte: 0x3C) // '<'
+      try output.write(ascii: "<")
       try output.writeAsHex(numbers: bytes)
-      try output.write(byte: 0x3E) // '>'
+      try output.write(ascii: ">")
     }
   }
 }

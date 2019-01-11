@@ -41,9 +41,9 @@ public class COSNumber: COSBase {
 
       let digit = string.utf8.first!
 
-      if 0x30 <= digit && digit <= 0x39 {
-        return COSInteger.get(Int(digit - 0x30))
-      } else if digit == 0x2D || digit == 0x2E {
+      if "0" <= digit && digit <= "9" {
+        return COSInteger.get(Int(digit - "0"))
+      } else if digit == "-" || digit == "." {
         // See https://issues.apache.org/jira/browse/PDFBOX-592
         return COSInteger.zero
       } else {

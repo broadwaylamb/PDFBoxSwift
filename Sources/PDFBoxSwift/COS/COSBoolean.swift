@@ -8,6 +8,12 @@
 /// This class represents a boolean value in the PDF document.
 public final class COSBoolean: COSBase {
 
+  /// The "true" boolean token.
+  private static let trueBytes: [UInt8] = Array("true".utf8)
+
+  /// The "false" boolean token.
+  private static let falseBytes: [UInt8] = Array("false".utf8)
+
   /// The PDF "true" value.
   public static let `true` = COSBoolean(value: true)
 
@@ -40,9 +46,9 @@ public final class COSBoolean: COSBase {
   /// - Throws: Any error the stream throws during writing.
   public func writePDF(_ output: OutputStream) throws {
     if value {
-      try output.writeUTF8("true")
+      try output.write(bytes: COSBoolean.trueBytes)
     } else {
-      try output.writeUTF8("false")
+      try output.write(bytes: COSBoolean.falseBytes )
     }
   }
 }

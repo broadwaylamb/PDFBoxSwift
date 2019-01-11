@@ -50,26 +50,26 @@ public final class COSName: COSBase {
   /// - Throws: Any error the stream throws during writing.
   public func writePDF(_ output: OutputStream) throws {
 
-    try output.write(byte: 0x2F) // '/'
+    try output.write(ascii: "/")
 
     for byte in name.utf8 {
 
       // Be more restrictive than the PDF spec, "Name Objects",
       // see https://issues.apache.org/jira/browse/PDFBOX-2073
-      if byte >= 0x41 && byte <= 0x5A || // 'A'-'Z'
-         byte >= 0x61 && byte <= 0x7A || // 'a'-'z'
-         byte >= 0x30 && byte <= 0x39 || // '0'-'9'
-         byte == 0x2B                 || // '+'
-         byte == 0x2D                 || // '-'
-         byte == 0x5F                 || // '_'
-         byte == 0x40                 || // '@'
-         byte == 0x2A                 || // '*'
-         byte == 0x24                 || // '$'
-         byte == 0x3B                 || // ';'
-         byte == 0x2E                  {  // '.'
+      if byte >= "A" && byte <= "Z" ||
+         byte >= "a" && byte <= "z" ||
+         byte >= "0" && byte <= "9" ||
+         byte == "+"                ||
+         byte == "-"                ||
+         byte == "_"                ||
+         byte == "@"                ||
+         byte == "*"                ||
+         byte == "$"                ||
+         byte == ";"                ||
+         byte == "."                 {
         try output.write(byte: byte)
       } else {
-        try output.write(byte: 0x23) // '#'
+        try output.write(ascii: "#")
         try output.writeAsHex(byte)
       }
     }

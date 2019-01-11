@@ -10,6 +10,8 @@ import PDFBoxSwiftIO
 /// This class represents a null PDF object.
 public final class COSNull: COSBase {
 
+  private static let nullBytes: [UInt8] = Array("null".utf8)
+
   /// The one null object in the system.
   public static let null = COSNull()
 
@@ -28,7 +30,7 @@ public final class COSNull: COSBase {
   /// - Parameter output: The stream to write to.
   /// - Throws: Any error the stream throws during writing.
   public func writePDF(_ output: OutputStream) throws {
-    try output.writeUTF8("null")
+    try output.write(bytes: COSNull.nullBytes)
   }
 }
 
