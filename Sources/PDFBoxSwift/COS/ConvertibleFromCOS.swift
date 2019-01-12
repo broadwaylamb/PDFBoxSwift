@@ -29,6 +29,12 @@ extension Int: ConvertibleFromCOS {
   }
 }
 
+extension Int32: ConvertibleFromCOS {
+  public init(cosRepresentation: COSInteger) {
+    self.init(truncatingIfNeeded: cosRepresentation.intValue)
+  }
+}
+
 extension Float: ConvertibleFromCOS {
   public init(cosRepresentation: COSFloat) {
     self = cosRepresentation.floatValue

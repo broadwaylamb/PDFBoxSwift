@@ -148,6 +148,11 @@ public final class COSWriter: COSVisitorProtocol {
     return nil
   }
 
+  public func visit(_ dictionary: COSDictionary) throws -> Any? {
+    // TODO
+    return nil
+  }
+
   public func visit(_ float: COSFloat) throws -> Any? {
     try float.writePDF(standardOuput)
     return nil

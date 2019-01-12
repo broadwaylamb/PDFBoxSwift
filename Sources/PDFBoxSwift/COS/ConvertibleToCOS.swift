@@ -30,6 +30,12 @@ extension Int: ConvertibleToCOS {
   }
 }
 
+extension Int32: ConvertibleToCOS {
+  public var cosRepresentation: COSInteger {
+    return COSInteger.get(Int(self))
+  }
+}
+
 extension Float: ConvertibleToCOS {
   public var cosRepresentation: COSFloat {
     return COSFloat(value: self)

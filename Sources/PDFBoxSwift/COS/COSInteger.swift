@@ -84,10 +84,8 @@ public final class COSInteger: COSNumber, ConvertibleToCOS {
   public var cosRepresentation: COSInteger {
     return self
   }
-}
 
-extension COSInteger: CustomDebugStringConvertible {
-  public var debugDescription: String {
+  public override var debugDescription: String {
     return "COSInt{\(value)}"
   }
 }

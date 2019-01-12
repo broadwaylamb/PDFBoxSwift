@@ -6,7 +6,10 @@
 //
 
 /// The base object that all objects in the PDF document will extend.
-public class COSBase: COSObjectable, Hashable {
+public class COSBase: COSObjectable,
+                      Hashable,
+                      CustomDebugStringConvertible,
+                      CustomStringConvertible {
 
   /// If the state is `true`, the dictionary will be written direct
   /// into the called object.
@@ -45,6 +48,14 @@ public class COSBase: COSObjectable, Hashable {
 
   public func hash(into hasher: inout Hasher) {
     hasher.combine(ObjectIdentifier(self))
+  }
+
+  public var description: String {
+    return debugDescription
+  }
+
+  public var debugDescription: String {
+    return "<\(type(of: self)): \(Unmanaged.passUnretained(self).toOpaque())>"
   }
 
   internal static func requiresConcreteImplementation(

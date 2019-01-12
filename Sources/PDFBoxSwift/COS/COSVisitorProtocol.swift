@@ -23,6 +23,12 @@ public protocol COSVisitorProtocol {
   /// - Returns: Any value depending on the visitor implementation, or `nil`
   func visit(_ bool: COSBoolean) throws -> Any?
 
+  /// Notification of visit to dictionary object.
+  ///
+  /// - Parameter dictionary: The dictionary object that is being visited.
+  /// - Returns: Any value depending on the visitor implementation, or `nil`
+  func visit(_ dictionary: COSDictionary) throws -> Any?
+
   /// Notification of visit to float object.
   ///
   /// - Parameter float: The float object that is being visited.

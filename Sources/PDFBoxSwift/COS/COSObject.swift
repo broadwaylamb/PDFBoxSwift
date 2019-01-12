@@ -53,10 +53,8 @@ public final class COSObject: COSBase, COSUpdateInfo {
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try object.accept(visitor: visitor)
   }
-}
 
-extension COSObject: CustomDebugStringConvertible {
-  public var debugDescription: String {
+  public override var debugDescription: String {
     return "COSObject{\(objectNumber), \(generationNumber)}"
   }
 }

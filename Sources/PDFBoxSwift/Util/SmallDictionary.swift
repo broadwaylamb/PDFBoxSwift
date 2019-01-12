@@ -95,7 +95,7 @@ extension SmallDictionary: MutableCollection {
   }
 }
 
-extension SmallDictionary: RandomAccessCollection {
+extension SmallDictionary: BidirectionalCollection {
 
   func index(before i: Index) -> Index {
     return Index(dictArr.index(before: i.arrIndex))
@@ -197,6 +197,18 @@ extension SmallDictionary {
   ///   dictionary.
   mutating func removeAll(keepingCapacity keepCapacity: Bool = false) {
     dictArr.removeAll(keepingCapacity: keepCapacity)
+  }
+
+  typealias Keys = LazyMapCollection<[KeyValuePair], Key>
+
+  var keys: Keys {
+    return dictArr.lazy.map { $0.key }
+  }
+
+  typealias Values = LazyMapCollection<[KeyValuePair], Value>
+
+  var values: Values {
+    return dictArr.lazy.map { $0.value }
   }
 }
 

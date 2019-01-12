@@ -62,6 +62,39 @@ public class COSDictionary: COSBase, COSUpdateInfo, ConvertibleToCOS {
   public var cosRepresentation: COSDictionary {
     return self
   }
+
+  /// The collection of keys of the dictionary,
+  public typealias Keys = AnyBidirectionalCollection<COSName>
+
+  /// The names of the entries in this dictionary. The returned collection is in
+  /// the order the entries were added to the dictionary.
+  public var keys: Keys {
+    return Keys(items.keys)
+  }
+
+  /// The collection of values of the dictionary,
+  public typealias Values = AnyBidirectionalCollection<COSBase>
+
+  /// The values of the dictionary.
+  public var values: Values {
+    return Values(items.values)
+  }
+
+  public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
+    return try visitor.visit(self)
+  }
+
+  public override var debugDescription: String {
+    var string = "COSDictionary{"
+    for (key, value) in self {
+      string.append(key.description)
+      string.append(":")
+      string.append(value.description)
+      string.append(";")
+    }
+    string.append("}")
+    return string
+  }
 }
 
 extension COSDictionary: MutableCollection {
@@ -111,7 +144,7 @@ extension COSDictionary: MutableCollection {
   }
 }
 
-extension COSDictionary: RandomAccessCollection {
+extension COSDictionary: BidirectionalCollection {
 
   public func index(before i: Index) -> Index {
     return Index(items.index(before: i.wrapped))
@@ -229,6 +262,26 @@ extension COSDictionary {
   public func removeAll(keepingCapacity keepCapacity: Bool = false) {
     items.removeAll(keepingCapacity: keepCapacity)
   }
+
+  /// This will add all of the dictionaries keys/values to this dictionary.
+  /// Only called when adding keys to a trailer that already exists.
+  ///
+  /// - Parameter other: other descriptionThe dictionary to get the keys from.
+  public func merge(_ other: COSDictionary) {
+
+    let selfContainsSize = items.contains(where: { $0.key == .size })
+
+    // TODO: This has complexity O(n*m) since the subscript is O(n).
+    // This can work in O(n+m).
+
+    for (key, value) in other where key != .size || !selfContainsSize {
+      // If we're at a second trailer, we have a linearized pdf file,
+      // meaning that the first Size entry represents all of the objects
+      // so we don't need to grab the second.
+
+      self[key] = value
+    }
+  }
 }
 
 // MARK: - Typed subscripts
@@ -334,6 +387,54 @@ extension COSDictionary {
     secondKey: TypedCOSName<T>
   ) -> T.ToCOS? {
     return self[cos: firstKey] ?? self[cos: secondKey]
+  }
+
+  /// This will get an object from this dictionary as an option set.
+  /// If the object is a reference then it will dereference it and get it
+  /// from the document.
+  /// If the object is `COSNull` or is not in the dictionary,
+  /// then empty option set will be returned.
+  ///
+  /// - Parameter key: The key to the object that we are getting.
+  /// - Returns: The option set that matches the key.
+  public subscript<T: OptionSet>(
+    native key: TypedCOSName<T>
+  ) -> T where T.RawValue == Int32, T.Element == T {
+    get {
+      let intValue = self[native: TypedCOSName<Int32>(key: key.key), default: 0]
+      return T(rawValue: intValue)
+    }
+    set {
+      self[native: TypedCOSName<Int32>(key: key.key), default: 0] =
+          newValue.rawValue
+    }
+  }
+
+  /// This will get an object from this dictionary as an option set and tell
+  /// if it contains the given flag.
+  /// If the object is a reference then it will dereference it and get it
+  /// from the document.
+  /// If the object is `COSNull` or is not in the dictionary,
+  /// then `false` will be returned.
+  ///
+  /// - Parameters:
+  ///   - key: The key to the object that we are getting.
+  ///   - flag: The flag to check or set.
+  /// - Returns: The value of the flag.
+  public subscript<T: OptionSet>(
+    native key: TypedCOSName<T>,
+    flag flag: T
+  ) -> Bool where T.RawValue == Int32, T.Element == T {
+    get {
+      return self[native: key].contains(flag)
+    }
+    set {
+      if newValue {
+        self[native: key].formUnion(flag)
+      } else {
+        self[native: key].subtract(flag)
+      }
+    }
   }
 }
 

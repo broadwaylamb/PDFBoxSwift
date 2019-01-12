@@ -78,10 +78,8 @@ public final class COSName: COSBase, ConvertibleToCOS {
   public var cosRepresentation: COSName {
     return self
   }
-}
 
-extension COSName: CustomDebugStringConvertible {
-  public var debugDescription: String {
+  public override var debugDescription: String {
     return "COSName{\(name)}"
   }
 }

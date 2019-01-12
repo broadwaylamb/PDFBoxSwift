@@ -88,10 +88,8 @@ public final class COSFloat: COSNumber, ConvertibleToCOS {
   public var cosRepresentation: COSFloat {
     return self
   }
-}
 
-extension COSFloat: CustomDebugStringConvertible {
-  public var debugDescription: String {
+  public override var debugDescription: String {
     return "COSFloat{\(stringValue)}"
   }
 }

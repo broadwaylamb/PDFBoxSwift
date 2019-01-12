@@ -55,10 +55,8 @@ public final class COSBoolean: COSBase, ConvertibleToCOS {
   public var cosRepresentation: COSBoolean {
     return self
   }
-}
 
-extension COSBoolean: CustomDebugStringConvertible {
-  public var debugDescription: String {
+  public override var debugDescription: String {
     return value.description
   }
 }

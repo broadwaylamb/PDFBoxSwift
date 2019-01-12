@@ -5,8 +5,6 @@
 //  Created by Sergej Jaskiewicz on 09/01/2019.
 //
 
-import PDFBoxSwiftIO
-
 /// This class represents a null PDF object.
 public final class COSNull: COSBase {
 
@@ -32,10 +30,8 @@ public final class COSNull: COSBase {
   public func writePDF(_ output: OutputStream) throws {
     try output.write(bytes: COSNull.nullBytes)
   }
-}
 
-extension COSNull: CustomDebugStringConvertible {
-  public var debugDescription: String {
+  public override var debugDescription: String {
     return "COSNull{}"
   }
 }

@@ -138,10 +138,8 @@ public final class COSString: COSBase, ConvertibleToCOS {
   public var cosRepresentation: COSString {
     return self
   }
-}
 
-extension COSString: CustomDebugStringConvertible {
-  public var debugDescription: String {
+  public override var debugDescription: String {
     return "COSString{\(string())}"
   }
 }

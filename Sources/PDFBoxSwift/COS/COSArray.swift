@@ -27,6 +27,10 @@ public final class COSArray: COSBase, COSUpdateInfo, ConvertibleToCOS {
   public var cosRepresentation: COSArray {
     return self
   }
+
+  public override var debugDescription: String {
+    return "COSArray{\(objects)}"
+  }
 }
 
 extension COSArray: RandomAccessCollection, MutableCollection {
@@ -318,11 +322,5 @@ extension COSArray {
     removeAll()
     objects.reserveCapacity(array.underestimatedCount)
     append(contentsOf: array.lazy.map(COSFloat.init))
-  }
-}
-
-extension COSArray: CustomDebugStringConvertible {
-  public var debugDescription: String {
-    return "COSArray{\(objects)}"
   }
 }
