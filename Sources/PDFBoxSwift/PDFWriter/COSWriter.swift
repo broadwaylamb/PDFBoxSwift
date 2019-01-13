@@ -81,7 +81,32 @@ public final class COSWriter: COSVisitorProtocol {
   /// The current object number.
   private var number = 0
 
-  // TODO: Add more field from the Java implementaion
+  /// Maps the objects to the keys generated in the writer.
+  ///
+  /// Used for indirect references in other objects.
+  private var objectKeys = [COSBase : COSObjectKey]()
+
+  /// Maps the keys generated in the writer to the objects.
+  ///
+  /// Used for indirect references in other objects.
+  private var keyObject = [COSObjectKey : COSBase]()
+
+  private var objectsToWriteSet = Set<COSBase>()
+
+  /// A list of objects to write.
+  private var objectsToWrite = LinkedList<COSBase>()
+
+  /// A set of objects already written
+  private var writtenObjects = Set<COSBase>()
+
+  /// An "actual" is any `COSBase` that is not a `COSObject`.
+  ///
+  /// We need to keep a list of the actuals that are added
+  /// as well as the objects because there is a problem
+  /// when adding a `COSObject` and then later adding
+  /// the actual for that object, so we will track
+  /// actuals separately.
+  private var actualsAdded = Set<COSBase>()
 
   private var willEncrypt = false
 
@@ -138,7 +163,25 @@ public final class COSWriter: COSVisitorProtocol {
     close()
   }
 
+  /// This will get the object key for the object.
+  ///
+  /// - Parameter object: The object to get the key for.
+  /// - Returns: The object key for the object.
+  private func key(for object: COSBase) -> COSObjectKey {
 
+    let actual = (object as? COSObject)?.object ?? object
+
+    let key = objectKeys[actual] ?? objectKeys[object]
+
+    if let key = key {
+      return key
+    } else {
+      number += 1
+      let key = COSObjectKey(number: number, generation: 0)
+      objectKeys[object] = key
+      return key
+    }
+  }
 
   @discardableResult
   public func visit(_ array: COSArray) throws -> Any? {
@@ -260,7 +303,12 @@ public final class COSWriter: COSVisitorProtocol {
   }
 
   public func writeReference(_ object: COSBase) throws {
-    // TODO
+    let key = self.key(for: object)
+    try standardOutput.write(number: key.number)
+    try standardOutput.write(bytes: COSWriter.space)
+    try standardOutput.write(number: key.generation)
+    try standardOutput.write(bytes: COSWriter.space)
+    try standardOutput.write(bytes: COSWriter.reference)
   }
 
   @discardableResult
@@ -270,7 +318,29 @@ public final class COSWriter: COSVisitorProtocol {
   }
 
   private func addObjectToWrite(_ object: COSBase) {
-    // TODO
+
+    let actual = (object as? COSObject)?.object ?? object
+
+    guard !writtenObjects.contains(object),
+          !objectsToWriteSet.contains(object),
+          !actualsAdded.contains(actual) else {
+      return
+    }
+
+    let cosObjectKey = objectKeys[actual]
+    let cosBase = cosObjectKey.flatMap { keyObject[$0] }
+
+    if objectKeys[actual] != nil,
+       let object = object as? COSUpdateInfo,
+       let cosBase = cosBase as? COSUpdateInfo,
+       !object.needsToBeUpdated,
+       !cosBase.needsToBeUpdated {
+      return
+    }
+
+    objectsToWrite.append(object)
+    objectsToWriteSet.insert(object)
+    actualsAdded.insert(actual)
   }
 
   /// This will close the stream.

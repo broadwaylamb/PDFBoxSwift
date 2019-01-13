@@ -1,5 +1,5 @@
 //
-//  OuptuStream.swift
+//  OutputStream.swift
 //  PDFBoxSwiftIO
 //
 //  Created by Sergej Jaskiewicz on 09/01/2019.
@@ -131,8 +131,26 @@ extension OutputStream {
     try write(bytes: bytes, offset: 0, count: bytes.count)
   }
 
-  public func writeUTF8(_ string: String) throws {
+  /// Writes the `string`'s UTF8 representation.
+  ///
+  /// Equivalent to `write(bytes: string.utf8)`.
+  ///
+  /// - Parameter string: The string to write to.
+  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
+  ///            may be thrown if the output stream has been closed.
+  public func write(utf8 string: String) throws {
     try write(bytes: string.utf8)
+  }
+
+  /// Writes the `number` as a string.
+  ///
+  /// Equivalent to `write(utf8: String(number))`.
+  ///
+  /// - Parameter number: The number to write to.
+  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
+  ///            may be thrown if the output stream has been closed.
+  public func write<T: BinaryInteger>(number: T) throws {
+    try write(utf8: String(number))
   }
 
   public func writeAsHex<T: FixedWidthInteger & UnsignedInteger>(

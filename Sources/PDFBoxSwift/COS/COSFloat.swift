@@ -82,7 +82,7 @@ public final class COSFloat: COSNumber, ConvertibleToCOS {
   /// - Parameter output: The stream to write to.
   /// - Throws: Any error the stream throws during writing.
   public func writePDF(_ output: OutputStream) throws {
-    try output.writeUTF8(stringValue)
+    try output.write(utf8: stringValue)
   }
 
   public var cosRepresentation: COSFloat {

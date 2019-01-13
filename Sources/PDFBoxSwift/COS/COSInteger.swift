@@ -78,7 +78,7 @@ public final class COSInteger: COSNumber, ConvertibleToCOS {
   /// - Parameter output: The stream to write to.
   /// - Throws: Any error the stream throws during writing.
   public func writePDF(_ output: OutputStream) throws {
-    try output.writeUTF8(String(value))
+    try output.write(utf8: String(value))
   }
 
   public var cosRepresentation: COSInteger {
