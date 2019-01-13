@@ -40,7 +40,6 @@ public final class COSStandardOutputStream: FilterOutputStream {
   ///   - bytes: The source collection of bytes.
   ///   - offset: The offset into the collection to start writing.
   ///   - count: The number of bytes to write.
-  /// - Throws: `IOError` If the underlying stream throws an error.
   public func write<Bytes>(bytes: Bytes, offset: Int, count: Int) throws
       where Bytes: Collection, Bytes.Element == UInt8 {
     isOnNewLine = false
@@ -51,7 +50,6 @@ public final class COSStandardOutputStream: FilterOutputStream {
   /// This will write a single byte to the stream.
   ///
   /// - Parameter byte: The byte to write to the stream.
-  /// - Throws: `IOError` If the underlying stream throws an error.
   public override func write(byte: UInt8) throws {
     isOnNewLine = false
     try out.write(byte: byte)
@@ -59,15 +57,11 @@ public final class COSStandardOutputStream: FilterOutputStream {
   }
 
   /// This will write a CRLF to the stream.
-  ///
-  /// - Throws: `IOError` If the underlying stream throws an error.
   public func writeCRLF() throws {
     try write(bytes: COSStandardOutputStream.crlf)
   }
 
   /// This will write an EOL to the stream.
-  ///
-  /// - Throws: `IOError` If the underlying stream throws an error.
   public func writeEOL() throws {
     if !isOnNewLine {
       try write(bytes: COSStandardOutputStream.eol)
@@ -76,8 +70,6 @@ public final class COSStandardOutputStream: FilterOutputStream {
   }
 
   /// This will write a line feed to the stream.
-  ///
-  /// - Throws: `IOError` If the underlying stream throws an error.
   public func writeLF() throws {
     try write(bytes: COSStandardOutputStream.lf)
   }

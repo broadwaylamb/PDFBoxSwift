@@ -41,8 +41,6 @@ public class FilterOutputStream: OutputStream {
   /// Implements the requirement of `OutputStream`.
   ///
   /// - Parameter byte: The byte.
-  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
-  ///            may be thrown if the output stream has been closed.
   public func write(byte: UInt8) throws {
     try out.write(byte: byte)
   }
@@ -51,9 +49,6 @@ public class FilterOutputStream: OutputStream {
   /// written out to the stream.
   /// The `flush` method of `FilterOutputStream` calls the `flush` method of
   /// its underlying output stream.
-  ///
-  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
-  ///            may be thrown if the output stream has been closed.
   public func flush() throws {
     try out.flush()
   }

@@ -11,8 +11,6 @@ extension OutputStream {
   /// to this output stream.
   ///
   /// - Parameter ascii: The byte.
-  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
-  ///            may be thrown if the output stream has been closed.
   /// - Precondition: `ascii.value` can be represented as ASCII (0..<128).
   public func write(ascii: UnicodeScalar) throws {
     try write(byte: UInt8(ascii: ascii))

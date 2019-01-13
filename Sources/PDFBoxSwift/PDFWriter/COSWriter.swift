@@ -145,7 +145,6 @@ public final class COSWriter: COSVisitorProtocol {
   ///                   It will be closed when this object is closed
   ///                   or deallocated.
   ///   - inputData: Random access read containing source PDF data.
-  /// - Throws: `IOError` if something went wrong.
   public init(outputStream: OutputStream, inputData: RandomAccessRead) throws {
 
     // write to buffer instead of output
@@ -199,6 +198,12 @@ public final class COSWriter: COSVisitorProtocol {
       case let current as COSObject:
         let subValue = current.object
         if willEncrypt || incrementalUpdate || subValue is COSDictionary {
+
+          // https://issues.apache.org/jira/browse/PDFBOX-4308
+          // added willEncrypt to prevent an object
+          // that is referenced several times from being written
+          // direct and indirect, thus getting encrypted
+          // with wrong object number or getting encrypted twice
           addObjectToWrite(current)
           try writeReference(current)
         } else {
@@ -390,7 +395,6 @@ public final class COSWriter: COSVisitorProtocol {
   /// - Parameters:
   ///   - string: `COSString` to be written
   ///   - output: The stream to write to.
-  /// - Throws: `IOError` If there is an error writing to the stream.
   public static func writeString(_ string: COSString,
                                  output: OutputStream) throws {
     try writeString(bytes: string.bytes,
@@ -403,7 +407,6 @@ public final class COSWriter: COSVisitorProtocol {
   /// - Parameters:
   ///   - bytes: The byte representation of a string to be written
   ///   - output: The stream to write to.
-  /// - Throws: `IOError` If there is an error writing to the stream.
   public static func writeString<Bytes: Collection>(
     bytes: Bytes,
     output: OutputStream

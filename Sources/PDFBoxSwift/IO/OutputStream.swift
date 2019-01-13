@@ -10,7 +10,7 @@
 ///
 /// Applications that implement `OutputStream` must always provide at least
 /// a method that writes one byte of output.
-public protocol OutputStream: AnyObject {
+public protocol OutputStream: Closeable, Flushable {
 
   /// Writes `count` bytes from the specified collection of bytes starting
   /// at `offset` to this output stream. The general contract for
@@ -32,8 +32,6 @@ public protocol OutputStream: AnyObject {
   ///   - bytes: The data.
   ///   - offset: The start offset in the data.
   ///   - count: The number of bytes to write.
-  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
-  ///            may be thrown if the output stream has been closed.
   func write<Bytes: Collection>(bytes: Bytes, offset: Int, count: Int) throws
       where Bytes.Element == UInt8
 
@@ -43,8 +41,6 @@ public protocol OutputStream: AnyObject {
   /// **Required**.
   ///
   /// - Parameter byte: The byte.
-  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
-  ///            may be thrown if the output stream has been closed.
   func write(byte: UInt8) throws
 
   /// Flushes this output stream and forces any buffered output bytes to be
@@ -62,9 +58,6 @@ public protocol OutputStream: AnyObject {
   /// The default implementation does nothing.
   ///
   /// **Required**. Default implementation provided.
-  ///
-  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
-  ///            may be thrown if the output stream has been closed.
   func flush() throws
 
   /// Closes this output stream and releases any system resources associated
@@ -112,8 +105,6 @@ extension OutputStream {
   /// The high-order bits of `byte` are ignored.
   ///
   /// - Parameter byte: The byte.
-  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
-  ///            may be thrown if the output stream has been closed.
   public func write<T: BinaryInteger>(byte: T) throws {
     try write(byte: UInt8(truncatingIfNeeded: byte))
   }
@@ -123,8 +114,6 @@ extension OutputStream {
   /// `write(bytes: bytes, offset: 0, count: bytes.count)`.
   ///
   /// - Parameter bytes: The data.
-  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
-  ///            may be thrown if the output stream has been closed.
   /// - SeeAlso: `write(bytes:offset:count:)`
   public func write<Bytes: Collection>(bytes: Bytes) throws
       where Bytes.Element == UInt8 {
@@ -136,8 +125,6 @@ extension OutputStream {
   /// Equivalent to `write(bytes: string.utf8)`.
   ///
   /// - Parameter string: The string to write to.
-  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
-  ///            may be thrown if the output stream has been closed.
   public func write(utf8 string: String) throws {
     try write(bytes: string.utf8)
   }
@@ -147,8 +134,6 @@ extension OutputStream {
   /// Equivalent to `write(utf8: String(number))`.
   ///
   /// - Parameter number: The number to write to.
-  /// - Throws: `IOError` – if an I/O error occurs. In particular, an `IOError`
-  ///            may be thrown if the output stream has been closed.
   public func write<T: BinaryInteger>(number: T) throws {
     try write(utf8: String(number))
   }
