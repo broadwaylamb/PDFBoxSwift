@@ -80,6 +80,7 @@ public class COSDictionary: COSBase, COSUpdateInfo, ConvertibleToCOS {
     return Values(items.values)
   }
 
+  @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try visitor.visit(self)
   }

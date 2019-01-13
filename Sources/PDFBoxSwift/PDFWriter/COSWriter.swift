@@ -73,7 +73,7 @@ public final class COSWriter: COSVisitorProtocol {
   private let output: OutputStream
 
   /// The stream used to write standard COS data.
-  private let standardOuput: COSStandardOutputStream
+  private let standardOutput: COSStandardOutputStream
 
   /// The start position of the x ref section
   private var startxref = 0
@@ -94,13 +94,13 @@ public final class COSWriter: COSVisitorProtocol {
   private var byteRangeLength = 0
 
   private struct Incremental {
-    var update = false
     var input: RandomAccessRead
     var output: OutputStream
     var part: [UInt8]
   }
 
   private var incremental: Incremental?
+  private var incrementalUpdate = false
   private var byteRangeArray = COSArray()
 
   /// `COSWriter` constructor.
@@ -110,7 +110,7 @@ public final class COSWriter: COSVisitorProtocol {
   ///                           or deallocated.
   public init(outputStream: OutputStream) {
     self.output = outputStream
-    self.standardOuput = COSStandardOutputStream(out: outputStream)
+    self.standardOutput = COSStandardOutputStream(out: outputStream)
   }
 
   /// `COSWriter` constructor for incremental updates.
@@ -125,11 +125,11 @@ public final class COSWriter: COSVisitorProtocol {
 
     // write to buffer instead of output
     output = ByteArrayOutputStream()
-    standardOuput = try COSStandardOutputStream(out: output,
+    standardOutput = try COSStandardOutputStream(out: output,
                                                 position: inputData.count())
 
-    incremental = Incremental(update: true,
-                              input: inputData,
+    incrementalUpdate = true
+    incremental = Incremental(input: inputData,
                               output: outputStream,
                               part: [])
   }
@@ -138,49 +138,144 @@ public final class COSWriter: COSVisitorProtocol {
     close()
   }
 
+
+
+  @discardableResult
   public func visit(_ array: COSArray) throws -> Any? {
     // TODO
     return nil
   }
 
+  @discardableResult
   public func visit(_ bool: COSBoolean) throws -> Any? {
-    try bool.writePDF(standardOuput)
+    try bool.writePDF(standardOutput)
     return nil
   }
 
+  @discardableResult
   public func visit(_ dictionary: COSDictionary) throws -> Any? {
-    // TODO
+
+    if !reachedSignature {
+      let itemType = dictionary[cos: .type]
+      if itemType == .sig || itemType == .docTimeStamp {
+        reachedSignature = true
+      }
+    }
+
+    try standardOutput.write(bytes: COSWriter.dictOpen)
+    try standardOutput.writeEOL()
+
+    for (key, value) in dictionary {
+
+      try key.accept(visitor: self)
+
+      try standardOutput.write(bytes: COSWriter.space)
+
+      switch value {
+      case let value as COSDictionary:
+        if !incrementalUpdate {
+
+          // write all XObjects as direct objects, this will save some size
+          // https://issues.apache.org/jira/browse/PDFBOX-3684
+          // but avoid dictionary that references itself
+          if let item = value[.xObject], key != .xObject {
+            item.isDirect = true
+          }
+
+          if let item = value[.resources], key != .resources {
+            item.isDirect = true
+          }
+        }
+
+        if value.isDirect {
+          // If the object should be written direct, we need
+          // to pass the dictionary to the visitor again.
+          try visit(value)
+        } else {
+          addObjectToWrite(value)
+          try writeReference(value)
+        }
+      case let value as COSObject:
+        if willEncrypt || incrementalUpdate || value.object is COSDictionary {
+
+          // https://issues.apache.org/jira/browse/PDFBOX-4308
+          // added willEncrypt to prevent an object
+          // that is referenced several times from being written
+          // direct and indirect, thus getting encrypted
+          // with wrong object number or getting encrypted twice
+          addObjectToWrite(value)
+          try writeReference(value)
+        } else {
+          try value.object.accept(visitor: self)
+        }
+      default:
+        // If we reach the PDF signature, we need to determinate the position
+        // of the content and byte range
+        if reachedSignature && key == .contents {
+          signatureOffset = standardOutput.position
+          try value.accept(visitor: self)
+          signatureLength = standardOutput.position - signatureOffset
+        } else if reachedSignature && key == .byteRange {
+          byteRangeArray = value as? COSArray ?? []
+          byteRangeOffset = standardOutput.position + 1
+          try value.accept(visitor: self)
+          byteRangeLength = standardOutput.position - 1 - byteRangeOffset
+          reachedSignature = false
+        } else {
+          try value.accept(visitor: self)
+        }
+      }
+
+      try standardOutput.writeEOL()
+    }
+
+    try standardOutput.write(bytes: COSWriter.dictClose)
+    try standardOutput.writeEOL()
+    
     return nil
   }
 
+  @discardableResult
   public func visit(_ float: COSFloat) throws -> Any? {
-    try float.writePDF(standardOuput)
+    try float.writePDF(standardOutput)
     return nil
   }
 
+  @discardableResult
   public func visit(_ int: COSInteger) throws -> Any? {
-    try int.writePDF(standardOuput)
+    try int.writePDF(standardOutput)
     return nil
   }
 
+  @discardableResult
   public func visit(_ name: COSName) throws -> Any? {
-    try name.writePDF(standardOuput)
+    try name.writePDF(standardOutput)
     return nil
   }
 
+  @discardableResult
   public func visit(_ null: COSNull) throws -> Any? {
-    try null.writePDF(standardOuput)
+    try null.writePDF(standardOutput)
     return nil
   }
 
+  public func writeReference(_ object: COSBase) throws {
+    // TODO
+  }
+
+  @discardableResult
   public func visit(_ string: COSString) throws -> Any? {
     // TODO
     return nil
   }
 
+  private func addObjectToWrite(_ object: COSBase) {
+    // TODO
+  }
+
   /// This will close the stream.
   func close() {
-    standardOuput.close()
+    standardOutput.close()
     incremental?.output.close()
   }
 
