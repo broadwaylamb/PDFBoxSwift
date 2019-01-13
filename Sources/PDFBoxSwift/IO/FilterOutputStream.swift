@@ -32,6 +32,10 @@ public class FilterOutputStream: OutputStream {
     self.out = out
   }
 
+  deinit {
+    try? close()
+  }
+
   /// Writes the specified byte to this output stream.
   ///
   /// The `write(byte:)` method of `FilterOutputStream` calls
@@ -59,14 +63,14 @@ public class FilterOutputStream: OutputStream {
   /// When not already closed, the `close` method of `FilterOutputStream` calls
   /// its `flush` method, and then calls the `close` method of its underlying
   /// output stream.
-  public func close() {
+  public func close() throws {
     if isClosed {
       return
     }
 
     isClosed = true
 
-    try? flush()
-    out.close()
+    try flush()
+    try out.close()
   }
 }

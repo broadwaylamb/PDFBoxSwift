@@ -20,7 +20,9 @@ public protocol RandomAccessRead: Closeable {
   ///   - offset: Offset into the buffer to start writing.
   ///   - count: The amount of data to attempt to read.
   /// - Returns: The number of bytes that were actually read.
-  func read(into buffer: inout [UInt8], offset: Int, count: Int) throws -> Int
+  func read(into buffer: UnsafeMutableBufferPointer<UInt8>,
+            offset: Int,
+            count: Int) throws -> Int
 
   /// Returns the offset of the next byte to be returned by a `read` method.
   ///
@@ -75,7 +77,7 @@ extension RandomAccessRead {
   ///
   /// - Parameter buffer: The buffer to write the data to.
   /// - Returns: The number of bytes that were actually read.
-  func read(into buffer: inout [UInt8]) throws -> Int {
-    return try read(into: &buffer, offset: 0, count: buffer.count)
+  func read(into buffer: UnsafeMutableBufferPointer<UInt8>) throws -> Int {
+    return try read(into: buffer, offset: 0, count: buffer.count)
   }
 }

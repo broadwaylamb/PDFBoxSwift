@@ -59,16 +59,6 @@ public protocol OutputStream: Closeable, Flushable {
   ///
   /// **Required**. Default implementation provided.
   func flush() throws
-
-  /// Closes this output stream and releases any system resources associated
-  /// with this stream. The general contract of `close` is that it closes
-  /// the output stream. A closed stream cannot perform output operations
-  /// and cannot be reopened.
-  ///
-  /// The default implementation does nothing.
-  ///
-  /// **Required**. Default implementation provided.
-  func close()
 }
 
 extension OutputStream {
@@ -97,7 +87,7 @@ extension OutputStream {
 
   public func flush() throws {}
 
-  public func close() {}
+  public func close() throws {}
 
   /// Writes the specified byte to this output stream. The general contract
   /// for write is that one byte is written to the output stream. The byte

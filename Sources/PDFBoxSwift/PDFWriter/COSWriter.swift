@@ -159,7 +159,7 @@ public final class COSWriter: COSVisitorProtocol {
   }
 
   deinit {
-    close()
+    try? close()
   }
 
   /// This will get the object key for the object.
@@ -385,9 +385,9 @@ public final class COSWriter: COSVisitorProtocol {
   }
 
   /// This will close the stream.
-  func close() {
-    standardOutput.close()
-    incremental?.output.close()
+  func close() throws {
+    try standardOutput.close()
+    try incremental?.output.close()
   }
 
   /// This will output the given string as a PDF object.
