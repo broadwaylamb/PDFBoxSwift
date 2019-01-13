@@ -185,7 +185,43 @@ public final class COSWriter: COSVisitorProtocol {
 
   @discardableResult
   public func visit(_ array: COSArray) throws -> Any? {
-    // TODO
+
+    try standardOutput.write(bytes: COSWriter.arrayOpen)
+    for (i, current) in array.enumerated() {
+      switch current {
+      case let current as COSDictionary:
+        if current.isDirect {
+          try visit(current)
+        } else {
+          addObjectToWrite(current)
+          try writeReference(current)
+        }
+      case let current as COSObject:
+        let subValue = current.object
+        if willEncrypt || incrementalUpdate || subValue is COSDictionary {
+          addObjectToWrite(current)
+          try writeReference(current)
+        } else {
+          try subValue.accept(visitor: self)
+        }
+      case nil, is COSNull:
+        try COSNull.null.accept(visitor: self)
+      case let current?:
+        try current.accept(visitor: self)
+      }
+
+      if i < array.endIndex - 1 {
+        if i.isMultiple(of: 10) {
+          try standardOutput.writeEOL()
+        } else {
+          try standardOutput.write(bytes: COSWriter.space)
+        }
+      }
+    }
+
+    try standardOutput.write(bytes: COSWriter.arrayClose)
+    try standardOutput.writeEOL()
+
     return nil
   }
 
