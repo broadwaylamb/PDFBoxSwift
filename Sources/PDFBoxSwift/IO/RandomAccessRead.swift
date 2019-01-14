@@ -56,6 +56,12 @@ public protocol RandomAccessRead: Closeable {
   /// - Parameter cout: The number of bytes to be seeked backwards.
   func rewind(count: UInt64) throws
 
+  /// Reads a given number of bytes.
+  ///
+  /// - Parameter count: The number of bytes to be read.
+  /// - Returns: A buffer array containing the bytes just read.
+  func readFully(count: Int) throws -> UnsafeBufferPointer<UInt8>
+
   /// A simple test to see if we are at the end of the data.
   ///
   /// - Returns: `true` if we are at the end of the data.
@@ -64,7 +70,7 @@ public protocol RandomAccessRead: Closeable {
   /// Returns an estimate of the number of bytes that can be read.
   ///
   /// - Returns: The number of bytes that can be read.
-  func available() throws -> UInt64
+  func available() throws -> Int
 }
 
 extension RandomAccessRead {
@@ -77,5 +83,21 @@ extension RandomAccessRead {
   ///            reached.
   func read(into buffer: UnsafeMutableBufferPointer<UInt8>) throws -> Int? {
     return try read(into: buffer, offset: 0, count: buffer.count)
+  }
+
+  public func readFully(count: Int) throws -> UnsafeBufferPointer<UInt8> {
+    let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: count)
+
+    do {
+      if let bytesRead = try read(into: buffer) {
+        return UnsafeBufferPointer(start: buffer.baseAddress, count: bytesRead)
+      } else {
+        buffer.deallocate()
+        return UnsafeBufferPointer(start: nil, count: 0)
+      }
+    } catch {
+      buffer.deallocate()
+      throw error
+    }
   }
 }

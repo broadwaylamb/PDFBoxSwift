@@ -85,7 +85,7 @@ public protocol InputStream: Closeable {
   /// - Returns: An estimate of the number of bytes that can be read (or skipped
   ///            over) from this input stream or 0 when it reaches the end of
   ///            the input stream. The default implementation returns 0.
-  func available() throws -> UInt64
+  func available() throws -> Int
 
   /// Marks the current position in this input stream. A subsequent call to
   /// the `reset` method repositions this stream at the last marked position so
@@ -201,7 +201,7 @@ extension InputStream {
     return n - remaining
   }
 
-  public func available() throws -> UInt64 {
+  public func available() throws -> Int {
     return 0
   }
 

@@ -71,8 +71,8 @@ extension BinaryFileInputStream: InputStream {
     }
   }
 
-  public func available() throws -> UInt64 {
-    return fileLength - fileOffset
+  public func available() throws -> Int {
+    return Int(clamping: fileLength - fileOffset)
   }
 }
 

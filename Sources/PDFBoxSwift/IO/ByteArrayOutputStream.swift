@@ -24,6 +24,12 @@ public final class ByteArrayOutputStream: OutputStream {
     self.bytes.append(contentsOf: bytes[start..<end])
   }
 
+  public func write(bytes: UnsafeBufferPointer<UInt8>,
+                    offset: Int,
+                    count: Int) throws {
+    self.bytes.append(contentsOf: bytes[offset..<offset + count])
+  }
+
   public func reset() {
     bytes = []
   }
