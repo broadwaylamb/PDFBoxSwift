@@ -10,7 +10,7 @@ extension FixedWidthInteger where Self: UnsignedInteger {
     let quadruples = stride(from: Self.bitWidth - 4, through: 0, by: -4)
       .lazy
       .map { (self & (0b1111 << $0)) >> $0 }
-      .map(UInt8.init)
+      .map(UInt8.init(_:))
     return quadruples.map { $0 < 10 ? 0x30 + $0 : 0x37 + $0 }
   }
 }

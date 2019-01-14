@@ -8,7 +8,7 @@
 /// An array of `COSBase` objects as part of the PDF document.
 public final class COSArray: COSBase, COSUpdateInfo, ConvertibleToCOS {
 
-  private private(set) var objects: [COSBase] = []
+  private var objects: [COSBase] = []
 
   /// The update state for the `COSWriter`. This indicates whether an object
   /// is to be written when there is an incremental save.

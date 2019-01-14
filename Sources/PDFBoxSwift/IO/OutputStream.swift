@@ -12,6 +12,14 @@
 /// a method that writes one byte of output.
 public protocol OutputStream: Closeable, Flushable {
 
+  /// Writes the specified byte to this output stream. The general contract
+  /// for write is that one byte is written to the output stream.
+  ///
+  /// **Required**.
+  ///
+  /// - Parameter byte: The byte.
+  func write(byte: UInt8) throws
+
   /// Writes `count` bytes from the specified collection of bytes starting
   /// at `offset` to this output stream. The general contract for
   /// `write(bytes:offset:count:)` is that some of the bytes in the collection
@@ -19,8 +27,11 @@ public protocol OutputStream: Closeable, Flushable {
   /// is the first byte written and bytes[offset + count - 1] is the last byte
   /// written by this operation.
   ///
-  /// The default implementation calls the `write(bytes:)` method on each of
-  /// the bytes to be written out. You can override
+  /// The default implementation calls the `UnsafeBufferPointer<UInt8>` version
+  /// of the `write(bytes:offset:count:)` method if the collection can provide
+  /// access to its contiguous storage in the form of
+  /// `UnsafeBufferPointer<UInt8>`, otherwise calls the `write(byte:)` method
+  /// on each of the byte to be written out. You can override
   /// this method to provide a more efficient implementation.
   ///
   /// If `offset` is negative, or `count` is negative, or `offset + count` is
@@ -35,38 +46,36 @@ public protocol OutputStream: Closeable, Flushable {
   func write<Bytes: Collection>(bytes: Bytes, offset: Int, count: Int) throws
       where Bytes.Element == UInt8
 
-  /// Writes the specified byte to this output stream. The general contract
-  /// for write is that one byte is written to the output stream.
+  /// Writes `count` bytes from the specified buffer of bytes starting
+  /// at `offset` to this output stream. The general contract for
+  /// `write(bytes:offset:count:)` is that some of the bytes in the collection
+  /// are written to the output stream in order; element `bytes[offset]`
+  /// is the first byte written and bytes[offset + count - 1] is the last byte
+  /// written by this operation.
   ///
-  /// **Required**.
+  /// The default implementation calls the `write(byte:)` method on each of
+  /// the byte to be written out. You can override
+  /// this method to provide a more efficient implementation.
   ///
-  /// - Parameter byte: The byte.
-  func write(byte: UInt8) throws
-
-  /// Flushes this output stream and forces any buffered output bytes to be
-  /// written out. The general contract of `flush` is that calling it is
-  /// an indication that, if any bytes previously written have been buffered
-  /// by the implementation of the output stream, such bytes should immediately
-  /// be written to their intended destination.
-  ///
-  /// If the intended destination of this stream is an abstraction provided
-  /// by the underlying operating system, for example a file, then flushing
-  /// the stream guarantees only that bytes previously written to the stream
-  /// are passed to the operating system for writing; it does not guarantee
-  /// that they are actually written to a physical device such as a disk drive.
-  ///
-  /// The default implementation does nothing.
+  /// If `offset` is negative, or `count` is negative, or `offset + count` is
+  /// greater than `bytes.count`, then a runtime error occurs.
   ///
   /// **Required**. Default implementation provided.
-  func flush() throws
+  ///
+  /// - Parameters:
+  ///   - bytes: The data.
+  ///   - offset: The start offset in the data.
+  ///   - count: The number of bytes to write.
+  func write(bytes: UnsafeBufferPointer<UInt8>, offset: Int, count: Int) throws
 }
 
 extension OutputStream {
 
-  public func write<Bytes: Collection>(bytes: Bytes,
-                                       offset: Int,
-                                       count: Int) throws
-      where Bytes.Element == UInt8 {
+  public func write<Bytes: Collection>(
+    bytes: Bytes,
+    offset: Int,
+    count: Int
+  ) throws where Bytes.Element == UInt8 {
 
     precondition(
       offset >= 0 &&
@@ -75,6 +84,33 @@ extension OutputStream {
       (offset + count) <= bytes.count,
       "Index out of bounds"
     )
+
+#if compiler(>=5)
+    // withContiguousStorageIfAvailable is available since Swift 5
+
+    let result: Void? = try bytes.withContiguousStorageIfAvailable { buffer in
+      try write(bytes: buffer, offset: offset, count: count)
+    }
+
+    if result != nil {
+      return
+    }
+#else
+    if let bytes = bytes as? [UInt8] {
+      try bytes.withUnsafeBufferPointer { buffer in
+        try write(bytes: buffer, offset: offset, count: count)
+      }
+      return
+    } else if let bytes = bytes as? ContiguousArray<UInt8> {
+      try bytes.withUnsafeBufferPointer { buffer in
+        try write(bytes: buffer, offset: offset, count: count)
+      }
+      return
+    } else if let buffer = bytes as? UnsafeBufferPointer<UInt8> {
+      try write(bytes: buffer, offset: offset, count: count)
+      return
+    }
+#endif
 
     var i = bytes.index(bytes.startIndex, offsetBy: offset)
     let end = bytes.index(i, offsetBy: count)
@@ -85,7 +121,26 @@ extension OutputStream {
     }
   }
 
-  public func flush() throws {}
+  public func write(bytes: UnsafeBufferPointer<UInt8>,
+                    offset: Int,
+                    count: Int) throws {
+
+    precondition(
+      offset >= 0 &&
+        offset < bytes.count &&
+        count >= 0 &&
+        (offset + count) <= bytes.count,
+      "Index out of bounds"
+    )
+
+    var i = offset
+    let end = offset + count
+
+    while i < end {
+      try write(byte: bytes[i])
+      i += 1
+    }
+  }
 
   public func close() throws {}
 
@@ -116,7 +171,13 @@ extension OutputStream {
   ///
   /// - Parameter string: The string to write to.
   public func write(utf8 string: String) throws {
-    try write(bytes: string.utf8)
+    let count = string.utf8.count
+    try string.withCString { ptr in
+      try ptr.withMemoryRebound(to: UInt8.self, capacity: count) { ptr in
+        let buffer = UnsafeBufferPointer(start: ptr, count: count)
+        try write(bytes: buffer)
+      }
+    }
   }
 
   /// Writes the `number` as a string.

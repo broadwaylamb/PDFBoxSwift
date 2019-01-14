@@ -113,10 +113,10 @@ public final class COSWriter: COSVisitorProtocol {
   // Signing
   private var reachedSignature = false
 
-  private var signatureOffset = 0
-  private var signatureLength = 0
-  private var byteRangeOffset = 0
-  private var byteRangeLength = 0
+  private var signatureOffset: UInt64 = 0
+  private var signatureLength: UInt64 = 0
+  private var byteRangeOffset: UInt64 = 0
+  private var byteRangeLength: UInt64 = 0
 
   private struct Incremental {
     var input: RandomAccessRead
@@ -150,7 +150,7 @@ public final class COSWriter: COSVisitorProtocol {
     // write to buffer instead of output
     output = ByteArrayOutputStream()
     standardOutput = try COSStandardOutputStream(out: output,
-                                                position: inputData.count())
+                                                 position: inputData.count())
 
     incrementalUpdate = true
     incremental = Incremental(input: inputData,

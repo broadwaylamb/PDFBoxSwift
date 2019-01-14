@@ -7,7 +7,7 @@
 
 extension BinaryInteger {
 
-#if !swift(>=5)
+#if !compiler(>=5)
   /// Returns true if this value is a multiple of `other`, and false otherwise.
   ///
   /// For two integers a and b, a is a multiple of b if there exists a third

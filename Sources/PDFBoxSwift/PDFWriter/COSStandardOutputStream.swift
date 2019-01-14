@@ -19,7 +19,7 @@ public final class COSStandardOutputStream: FilterOutputStream {
   public static let eol: [UInt8] = [0x0A]
 
   /// Current byte position in the output stream.
-  public private(set) var position: Int
+  public private(set) var position: UInt64
 
   /// Flag to prevent generating two newlines in sequence.
   public var isOnNewLine: Bool = false
@@ -29,7 +29,7 @@ public final class COSStandardOutputStream: FilterOutputStream {
   /// - Parameters:
   ///   - out: The underlying stream to write to.
   ///   - position: The current position of output stream.
-  public init(out: OutputStream, position: Int = 0) {
+  public init(out: OutputStream, position: UInt64 = 0) {
     self.position = position
     super.init(out: out)
   }
@@ -44,7 +44,7 @@ public final class COSStandardOutputStream: FilterOutputStream {
       where Bytes: Collection, Bytes.Element == UInt8 {
     isOnNewLine = false
     try out.write(bytes: bytes, offset: offset, count: count)
-    position += count
+    position += UInt64(count)
   }
 
   /// This will write a single byte to the stream.

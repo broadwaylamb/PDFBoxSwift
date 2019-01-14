@@ -5,7 +5,21 @@
 //  Created by Sergej Jaskiewicz on 14/01/2019.
 //
 
-public struct IOError: Error, CustomStringConvertible {
+public enum IOError: Error {
+  case readingError
+  case writingError
+  case markResetNotSupported
+}
 
-  public let description: String
+extension IOError: CustomStringConvertible {
+  public var description: String {
+    switch self {
+    case .readingError:
+      return "Reading failed"
+    case .writingError:
+      return "Writing failed"
+    case .markResetNotSupported:
+      return "InputStream: mark/reset not supported"
+    }
+  }
 }

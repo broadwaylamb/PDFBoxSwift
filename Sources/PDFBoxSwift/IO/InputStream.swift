@@ -85,7 +85,7 @@ public protocol InputStream: Closeable {
   /// - Returns: An estimate of the number of bytes that can be read (or skipped
   ///            over) from this input stream or 0 when it reaches the end of
   ///            the input stream. The default implementation returns 0.
-  func available() throws -> Int
+  func available() throws -> UInt64
 
   /// Marks the current position in this input stream. A subsequent call to
   /// the `reset` method repositions this stream at the last marked position so
@@ -154,7 +154,7 @@ extension InputStream {
   public func read(into buffer: UnsafeMutableBufferPointer<UInt8>,
                    offset: Int,
                    count: Int) throws -> Int? {
-    // TODO
+
     precondition(offset >= 0 && count >= 0 || count > buffer.count - offset,
                  "Index out of bounds")
 
@@ -201,19 +201,19 @@ extension InputStream {
     return n - remaining
   }
 
-  func available() throws -> Int {
+  public func available() throws -> UInt64 {
     return 0
   }
 
-  func close() throws {}
+  public func close() throws {}
 
-  func mark(readLimit: Int) {}
+  public func mark(readLimit: Int) {}
 
-  func reset() throws {
-    throw IOError(description: "mark/reset not supported")
+  public func reset() throws {
+    throw IOError.markResetNotSupported
   }
 
-  var isMarkSupported: Bool { return false }
+  public var isMarkSupported: Bool { return false }
 
   /// Reads some number of bytes from the input stream and stores them into
   /// `buffer`. The number of bytes actually read is returned as an integer.
