@@ -21,8 +21,10 @@ internal final class AtomicReference<T> {
     return synchronized!.value
   }
 
-  func atomically(execute: (inout T) -> Void) {
-    synchronized!.atomically(execute: execute)
+  func atomically<Result>(
+    execute: (inout T) throws -> Result
+  ) rethrows -> Result {
+    return try synchronized!.atomically(execute: execute)
   }
 }
 

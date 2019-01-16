@@ -11,5 +11,7 @@
 /// relies on the options being used.
 public struct DecodeOptions {
 
+  public static let `default` = DecodeOptions()
+
   // TODO
 }

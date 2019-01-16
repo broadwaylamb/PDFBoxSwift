@@ -77,9 +77,6 @@ extension Writer {
       "Index out of bounds"
     )
 
-    #if compiler(>=5)
-    // withContiguousStorageIfAvailable is available since Swift 5
-
     let result: Void? = try bytes.withContiguousStorageIfAvailable { buffer in
       try write(bytes: buffer, offset: offset, count: count)
     }
@@ -87,27 +84,6 @@ extension Writer {
     if result != nil {
       return
     }
-    #else
-    if let bytes = bytes as? [UInt8] {
-      try bytes.withUnsafeBufferPointer { buffer in
-        try write(bytes: buffer, offset: offset, count: count)
-      }
-      return
-    } else if let bytes = bytes as? ContiguousArray<UInt8> {
-      try bytes.withUnsafeBufferPointer { buffer in
-        try write(bytes: buffer, offset: offset, count: count)
-      }
-      return
-    } else if let buffer = bytes as? UnsafeBufferPointer<UInt8> {
-      try write(bytes: buffer, offset: offset, count: count)
-      return
-    } else if let buffer = bytes as? UnsafeMutableBufferPointer<UInt8> {
-      try write(bytes: UnsafeBufferPointer(buffer),
-                offset: offset,
-                count: count)
-      return
-    }
-    #endif
 
     var i = bytes.index(bytes.startIndex, offsetBy: offset)
     let end = bytes.index(i, offsetBy: count)
