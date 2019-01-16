@@ -11,7 +11,7 @@
 /// but possibly transforming the data along the way or providing additional
 /// functionality.
 ///
-/// The class `FilterOutputStream` itself simply overrides all methods of
+/// The class `FilterOutputStream` itself simply implements all methods of
 /// OutputStream with versions that pass all requests to the underlying output
 /// stream. Subclasses of `FilterOutputStream` may further override some of
 /// these methods as well as provide additional methods and fields.

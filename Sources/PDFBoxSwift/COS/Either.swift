@@ -9,59 +9,52 @@ public enum Either<Left, Right> {
   case left(Left)
   case right(Right)
 
+  @inlinable // Inlinable as trivially forwarding and generic
   public init(_ value: Left) {
     self = .left(value)
   }
 
+  @inlinable // Inlinable as trivially forwarding and generic
   public init(_ value: Right) {
     self = .right(value)
+  }
+
+  @inlinable // Inlinable as trivially forwarding and generic
+  public func mapLeft<U>(
+    _ transform: (Left
+  ) throws -> U) rethrows -> Either<U, Right> {
+    switch self {
+    case .left(let left):
+      return try .left(transform(left))
+    case .right(let right):
+      return .right(right)
+    }
+  }
+
+  @inlinable // Inlinable as trivially forwarding and generic
+  public func mapRight<U>(
+    _ transform: (Right
+    ) throws -> U) rethrows -> Either<Left, U> {
+    switch self {
+    case .left(let left):
+      return .left(left)
+    case .right(let right):
+      return try .right(transform(right))
+    }
+  }
+
+  @inlinable // Inlinable as trivially forwarding and generic
+  public func transform<U>(ifLeft: (Left) throws -> U,
+                           ifRight: (Right) throws -> U) rethrows -> U {
+    switch self {
+    case let .left(left):
+      return try ifLeft(left)
+    case let .right(right):
+      return try ifRight(right)
+    }
   }
 }
 
 extension Either: Equatable where Left: Equatable, Right: Equatable {}
 
 extension Either: Hashable where Left: Hashable, Right: Hashable {}
-
-extension Either: COSObjectable
-    where Left: COSObjectable, Right: COSObjectable {
-
-  public var cosObject: COSBase {
-    switch self {
-    case .left(let left):
-      return left.cosObject
-    case .right(let right):
-      return right.cosObject
-    }
-  }
-}
-
-extension Either: ConvertibleToCOS
-    where Left: ConvertibleToCOS, Left: COSObjectable,
-          Right: ConvertibleToCOS, Right: COSObjectable {
-
-  public typealias ToCOS = Either<Left.ToCOS, Right.ToCOS>
-
-  public var cosRepresentation: ToCOS {
-    switch self {
-    case .left(let left):
-      return .left(left.cosRepresentation)
-    case .right(let right):
-      return .right(right.cosRepresentation)
-    }
-  }
-}
-
-extension Either: ConvertibleFromCOS
-    where Left: ConvertibleFromCOS, Right: ConvertibleFromCOS {
-
-  public typealias FromCOS = Either<Left.FromCOS, Right.FromCOS>
-
-  public init(cosRepresentation: FromCOS) {
-    switch cosRepresentation {
-    case .left(let left):
-      self = .left(Left(cosRepresentation: left))
-    case .right(let right):
-      self = .right(Right(cosRepresentation: right))
-    }
-  }
-}

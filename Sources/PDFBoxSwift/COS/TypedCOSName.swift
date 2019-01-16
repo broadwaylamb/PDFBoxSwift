@@ -46,6 +46,12 @@ extension TypedCOSName where T == Either<COSName, COSArray> {
   /// specified in the order in which they are to be applied.
   public static let filter = TypedCOSName(key: .filter)
 
+  /// *(Optional)* The name of a filter that shall be applied in processing
+  /// the stream data found between the keywords **stream** and **endstream**,
+  /// or an array of zero, one or several names. Multiple filters shall be
+  /// specified in the order in which they are to be applied.
+  public static let filterAbbreviated = TypedCOSName(key: .f)
+
   /// **(Optional; PDF 1.2)** The name of a filter to be applied in processing
   /// the data found in the stream’s external file, or an array of zero, one or
   /// several such names. The same rules apply as for **Filter**.
@@ -67,6 +73,20 @@ extension TypedCOSName where T == Either<COSDictionary, COSArray> {
   /// parameters, or if all their parameters have default values,
   /// the **DecodeParms** entry may be omitted.
   public static let decodeParms = TypedCOSName(key: .decodeParms)
+
+  /// *(Optional)* A parameter dictionary or an array of such dictionaries,
+  /// used by the filters specified by **Filter**. If there is only one
+  /// filter and that filter has parameters, **DecodeParms** shall be set to
+  /// the filter’s parameter dictionary unless all the filter’s parameters
+  /// have their default values, in which case the **DecodeParms** entry may be
+  /// omitted. If there are multiple filters and any of the filters has
+  /// parameters set to nondefault values, **DecodeParms** shall be an array
+  /// with one entry for each filter: either the parameter dictionary for that
+  /// filter, or the null object if that filter has no parameters (or if all
+  /// of its parameters have their default values). If none of the filters have
+  /// parameters, or if all their parameters have default values,
+  /// the **DecodeParms** entry may be omitted.
+  public static let decodeParmsAbbreviated = TypedCOSName(key: .dp)
 
   /// **(Optional; PDF 1.2)** A parameter dictionary, or an array of such
   /// dictionaries, used by the filters specified by **FFilter**.

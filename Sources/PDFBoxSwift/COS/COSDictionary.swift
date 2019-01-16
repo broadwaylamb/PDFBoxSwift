@@ -295,12 +295,39 @@ extension COSDictionary {
   ///
   /// - Parameter key: The key to the object that we are getting.
   /// - Returns: The object that matches the key.
+  @inlinable // Inlinable as trivially forwarding and generic
   public subscript<T: ConvertibleToCOS>(cos key: TypedCOSName<T>) -> T.ToCOS? {
     get {
       return self[key.key] as? T.ToCOS
     }
     set {
-      self[key.key] = newValue?.cosObject
+      self[key.key] = newValue
+    }
+  }
+
+  /// This will get an object from this dictionary as a COS object.
+  /// If the object is a reference then it will dereference it and get it
+  /// from the document. If the object is `COSNull` or is not in
+  /// the dictionary, then `nil` will be returned.
+  ///
+  /// - Parameter key: The key to the object that we are getting.
+  /// - Returns: The object that matches the key.
+  @inlinable // Inlinable as trivially forwarding and generic
+  public subscript<T: ConvertibleToCOS, S: ConvertibleToCOS>(
+    cos key: TypedCOSName<Either<T, S>>
+  ) -> Either<T.ToCOS, S.ToCOS>? {
+    get {
+      switch self[key.key] {
+      case let r as T.ToCOS:
+        return .left(r)
+      case let r as S.ToCOS:
+        return .right(r)
+      default:
+        return nil
+      }
+    }
+    set {
+      self[key.key] = newValue?.transform(ifLeft: { $0 }, ifRight: { $0 })
     }
   }
 
@@ -312,6 +339,7 @@ extension COSDictionary {
   ///
   /// - Parameter key: The key to the object that we are getting.
   /// - Returns: The native value of the object that matches the key.
+  @inlinable // Inlinable as trivially forwarding and generic
   public subscript<T: ConvertibleFromCOS & ConvertibleToCOS>(
     native key: TypedCOSName<T>
   ) -> T? where T.ToCOS == T.FromCOS {
@@ -327,12 +355,41 @@ extension COSDictionary {
   /// If the object is a reference then it will dereference it and get it
   /// from the document.
   /// If the object is `COSNull` or is not in the dictionary,
+  /// then `nil` will be returned.
+  ///
+  /// - Parameter key: The key to the object that we are getting.
+  /// - Returns: The native value of the object that matches the key.
+  @inlinable // Inlinable as trivially forwarding and generic
+  public subscript<T: ConvertibleFromCOS & ConvertibleToCOS,
+                   S: ConvertibleFromCOS & ConvertibleToCOS>(
+    native key: TypedCOSName<Either<T, S>>
+  ) -> Either<T, S>? where T.ToCOS == T.FromCOS, S.ToCOS == S.FromCOS {
+    get {
+      return self[cos: key]?.mapLeft(T.init).mapRight(S.init)
+    }
+    set {
+      switch newValue {
+      case .left(let t)?:
+        self[cos: key] = .left(t.cosRepresentation)
+      case .right(let s)?:
+        self[cos: key] = .right(s.cosRepresentation)
+      case nil:
+        self[cos: key] = nil
+      }
+    }
+  }
+
+  /// This will get an object from this dictionary as a native Swift value.
+  /// If the object is a reference then it will dereference it and get it
+  /// from the document.
+  /// If the object is `COSNull` or is not in the dictionary,
   /// then `defaultValue` will be returned.
   ///
   /// - Parameters:
   ///   - key: The key to the item in the dictionary.
   ///   - defaultValue: The value returned if the entry is `nil`.
   /// - Returns: The object that matches the key.
+  @inlinable // Inlinable as trivially forwarding and generic
   public subscript<T: ConvertibleFromCOS & ConvertibleToCOS>(
     native key: TypedCOSName<T>,
     default defaultValue: @autoclosure () ->  T
@@ -360,6 +417,7 @@ extension COSDictionary {
   ///   - secondKey: The second key to the item in the dictionary.
   ///   - defaultValue: The value returned if the entry is `nil`.
   /// - Returns: The object that matches the key.
+  @inlinable // Inlinable as trivially forwarding and generic
   public subscript<T: ConvertibleFromCOS & ConvertibleToCOS>(
     native firstKey: TypedCOSName<T>,
     secondKey: TypedCOSName<T>,
@@ -383,11 +441,34 @@ extension COSDictionary {
   ///   - firstKey: The first key to the item in the dictionary.
   ///   - secondKey: The second key to the item in the dictionary.
   /// - Returns: The object that matches the key.
+  @inlinable // Inlinable as trivially forwarding and generic
   public subscript<T: ConvertibleToCOS>(
     cos firstKey: TypedCOSName<T>,
     secondKey: TypedCOSName<T>
   ) -> T.ToCOS? {
     return self[cos: firstKey] ?? self[cos: secondKey]
+  }
+
+  /// This is a special case of subscript that takes two keys,
+  /// it will handle the situation where multiple keys could get the same value,
+  /// ie if either "CS" or "ColorSpace" is used to get the colorspace.
+  ///
+  /// This will get an object from this dictionary as a COS object.
+  /// If the object is a reference then it will dereference it and get it
+  /// from the document.
+  /// If the object is `COSNull` or is not in the dictionary,
+  /// then `nil` will be returned.
+  ///
+  /// - Parameters:
+  ///   - firstKey: The first key to the item in the dictionary.
+  ///   - secondKey: The second key to the item in the dictionary.
+  /// - Returns: The object that matches the key.
+  @inlinable // Inlinable as trivially forwarding and generic
+  public subscript<T: ConvertibleToCOS, S: ConvertibleToCOS>(
+    cos firstKey: TypedCOSName<Either<T, S>>,
+    secondKey: TypedCOSName<Either<T, S>>
+  ) -> Either<T.ToCOS, S.ToCOS>? {
+      return self[cos: firstKey] ?? self[cos: secondKey]
   }
 
   /// This will get an object from this dictionary as an option set.
@@ -398,6 +479,7 @@ extension COSDictionary {
   ///
   /// - Parameter key: The key to the object that we are getting.
   /// - Returns: The option set that matches the key.
+  @inlinable // Inlinable as trivially forwarding and generic
   public subscript<T: OptionSet>(
     native key: TypedCOSName<T>
   ) -> T where T.RawValue == Int32, T.Element == T {
@@ -422,6 +504,7 @@ extension COSDictionary {
   ///   - key: The key to the object that we are getting.
   ///   - flag: The flag to check or set.
   /// - Returns: The value of the flag.
+  @inlinable // Inlinable as trivially forwarding and generic
   public subscript<T: OptionSet>(
     native key: TypedCOSName<T>,
     flag flag: T

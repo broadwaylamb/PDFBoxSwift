@@ -12,7 +12,7 @@
 /// converting a value of your type to a COS object.
 public protocol ConvertibleToCOS {
 
-  associatedtype ToCOS: COSObjectable
+  associatedtype ToCOS: COSBase
 
   /// A strategy of converting a value of the conforming type to a COS object.
   var cosRepresentation: ToCOS { get }

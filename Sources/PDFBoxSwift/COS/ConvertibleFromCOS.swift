@@ -11,7 +11,7 @@
 /// You can conform your types to this protocol do define a strategy of
 /// converting a COS object to your types.
 public protocol ConvertibleFromCOS {
-  associatedtype FromCOS: COSObjectable
+  associatedtype FromCOS: COSBase
 
   /// A strategy of converting a COS object to the conforming type.
   init(cosRepresentation: FromCOS)
