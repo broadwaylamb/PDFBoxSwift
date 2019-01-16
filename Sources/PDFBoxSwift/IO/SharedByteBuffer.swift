@@ -10,7 +10,7 @@ internal final class SharedByteBuffer: MutableCollection,
 
   let buffer: UnsafeMutableBufferPointer<UInt8>
 
-  private init(moving buffer: UnsafeMutableBufferPointer<UInt8>) {
+  init(moving buffer: UnsafeMutableBufferPointer<UInt8>) {
     self.buffer = buffer
   }
 

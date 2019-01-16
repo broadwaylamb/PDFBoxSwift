@@ -5,28 +5,68 @@
 //  Created by Sergej Jaskiewicz on 09/01/2019.
 //
 
+#if !PDFBOX_NO_LIBDISPATCH
 import Dispatch
+#endif
 
 internal final class AtomicReference<T> {
 
-  private lazy var _syncQueue = DispatchQueue(
-    label: "com.PDFBoxSwift.AtomicReference.\(ObjectIdentifier(self))",
-    attributes: .concurrent
-  )
-
-  private var _value: T
+  private var synchronized: Synchronized<T>?
 
   init(_ value: T) {
-    _value = value
+    synchronized = Synchronized(value, lock: self)
   }
 
   var value: T {
-    return _syncQueue.sync { return _value }
+    return synchronized!.value
   }
 
   func atomically(execute: (inout T) -> Void) {
-    _syncQueue.sync(flags: .barrier) {
-      execute(&_value)
+    synchronized!.atomically(execute: execute)
+  }
+}
+
+internal struct Synchronized<T> {
+
+#if !PDFBOX_NO_LIBDISPATCH
+  private let _syncQueue: DispatchQueue
+#endif
+
+  private var _value: T
+
+  init(_ value: T, lock: AnyObject) {
+    _value = value
+#if !PDFBOX_NO_LIBDISPATCH
+    _syncQueue = DispatchQueue(
+      label: "com.PDFBoxSwift.Synchronized.\(ObjectIdentifier(lock))",
+      attributes: .concurrent
+    )
+#endif
+  }
+
+  var value: T {
+#if !PDFBOX_NO_LIBDISPATCH
+    return _syncQueue.sync { return _value }
+#else
+    return _value
+#endif
+  }
+
+  mutating func atomically<Result>(
+    execute: (inout T) throws -> Result
+  ) rethrows -> Result {
+#if !PDFBOX_NO_LIBDISPATCH
+    return try _syncQueue.sync(flags: .barrier) {
+      try execute(&_value)
     }
+#else
+    return try execute(&_value)
+#endif
+  }
+
+  mutating func nonatomically<Result>(
+    execute: (inout T) throws -> Result
+  ) rethrows -> Result {
+    return try execute(&_value)
   }
 }

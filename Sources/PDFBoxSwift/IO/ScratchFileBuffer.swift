@@ -142,7 +142,7 @@ extension ScratchFileBuffer: RandomAccess {
       }
 
       guard let currentPagePtr = currentPage.buffer.baseAddress else {
-        assertionFailure("The buffer must not be NULL")
+        assertionFailure("The buffer must not be empty")
         return nil
       }
 
@@ -238,7 +238,7 @@ extension ScratchFileBuffer: RandomAccess {
     try seek(position: currentPageOffset + UInt64(positionInPage) - count)
   }
 
-  func readFully(count: Int) throws -> UnsafeBufferPointer<UInt8> {
+  func readFully(count: Int) throws -> UnsafeMutableBufferPointer<UInt8> {
     let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: count)
 
     do {
@@ -255,7 +255,7 @@ extension ScratchFileBuffer: RandomAccess {
       throw error
     }
 
-    return UnsafeBufferPointer(buffer)
+    return buffer
   }
 
   func isEOF() throws -> Bool {

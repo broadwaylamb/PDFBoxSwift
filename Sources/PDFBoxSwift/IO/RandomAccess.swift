@@ -7,4 +7,4 @@
 
 /// A protocol to allow data to be stored completely in memory or to use
 /// a scratch file on the disk.
-public protocol RandomAccess: RandomAccessRead, RandomAccessWrite {}
+public typealias RandomAccess = RandomAccessRead & RandomAccessWrite

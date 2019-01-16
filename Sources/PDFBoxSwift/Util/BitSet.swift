@@ -85,6 +85,22 @@ internal struct BitSet {
     }
   }
 
+  func nextBitSet(from index: Int) -> Int? {
+    precondition(index >= 0, "Index out of bounds")
+    var storageIndex = index / wordBitSize
+    guard storageIndex < wordCount else { return nil }
+    var word = storage[storageIndex] & (allOnesWord << (index % wordBitSize))
+    while storageIndex < wordCount {
+      if word != 0 {
+        return storageIndex * wordBitSize + word.trailingZeroBitCount
+      } else {
+        storageIndex += 1
+        word = storage[storageIndex]
+      }
+    }
+    return nil
+  }
+
   var count: Int {
     if wordCount == 0 { return 0 }
     return wordBitSize * wordCount - storage[wordCount - 1].leadingZeroBitCount

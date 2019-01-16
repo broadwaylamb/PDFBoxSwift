@@ -60,7 +60,7 @@ public protocol RandomAccessRead: Closeable {
   ///
   /// - Parameter count: The number of bytes to be read.
   /// - Returns: A buffer array containing the bytes just read.
-  func readFully(count: Int) throws -> UnsafeBufferPointer<UInt8>
+  func readFully(count: Int) throws -> UnsafeMutableBufferPointer<UInt8>
 
   /// A simple test to see if we are at the end of the data.
   ///
@@ -85,15 +85,16 @@ extension RandomAccessRead {
     return try read(into: buffer, offset: 0, count: buffer.count)
   }
 
-  public func readFully(count: Int) throws -> UnsafeBufferPointer<UInt8> {
+  public func readFully(count: Int) throws -> UnsafeMutableBufferPointer<UInt8> {
     let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: count)
 
     do {
       if let bytesRead = try read(into: buffer) {
-        return UnsafeBufferPointer(start: buffer.baseAddress, count: bytesRead)
+        return UnsafeMutableBufferPointer(start: buffer.baseAddress,
+                                          count: bytesRead)
       } else {
         buffer.deallocate()
-        return UnsafeBufferPointer(start: nil, count: 0)
+        return UnsafeMutableBufferPointer(start: nil, count: 0)
       }
     } catch {
       buffer.deallocate()

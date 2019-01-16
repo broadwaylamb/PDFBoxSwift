@@ -14,42 +14,25 @@ import Glibc
 
 #if canImport(Darwin) || canImport(Glibc)
 
-public final class BinaryFileOutputStream: BinaryFileStream {
+public final class BinaryFileOutputStream: BinaryFileStream, OutputStream {
 
   public override init(path: String) throws {
     try super.init(path: path)
-
     try open(mode: "wb")
   }
-}
 
-extension BinaryFileOutputStream: OutputStream {
-
-  public func write(byte: UInt8) throws {
-    try withUnsafeMutablePointer { pointer in
-      if fputc(Int32(byte), pointer) == EOF {
-        throw IOError.writingError
-      }
-    }
+  public override func write(byte: UInt8) throws {
+    try super.write(byte: byte)
   }
 
-  public func write(bytes: UnsafeBufferPointer<UInt8>,
-                    offset: Int,
-                    count: Int) throws {
-    try withUnsafeMutablePointer { cStream in
-      let ptr = bytes.baseAddress?.advanced(by: offset)
-      if fwrite(ptr, /*size of UInt8*/ 1, count, cStream) != count {
-        throw IOError.writingError
-      }
-    }
+  public override func write(bytes: UnsafeBufferPointer<UInt8>,
+                             offset: Int,
+                             count: Int) throws {
+    try super.write(bytes: bytes, offset: offset, count: count)
   }
 
-  public func flush() throws {
-    try withUnsafeMutablePointer { cStream in
-      if fflush(cStream) != 0 {
-        throw IOError.writingError
-      }
-    }
+  public override func flush() throws {
+    try super.flush()
   }
 }
 

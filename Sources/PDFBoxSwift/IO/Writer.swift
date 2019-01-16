@@ -83,11 +83,11 @@ extension Writer {
     // withContiguousStorageIfAvailable is available since Swift 5
 
     let result: Void? = try bytes.withContiguousStorageIfAvailable { buffer in
-    try write(bytes: buffer, offset: offset, count: count)
+      try write(bytes: buffer, offset: offset, count: count)
     }
 
     if result != nil {
-    return
+      return
     }
     #else
     if let bytes = bytes as? [UInt8] {

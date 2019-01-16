@@ -5,13 +5,16 @@
 //  Created by Sergej Jaskiewicz on 14/01/2019.
 //
 
-public enum IOError: Error {
+public enum IOError: Error, Hashable {
   case readingError
   case writingError
   case markResetNotSupported
   case scratchFileClosed
   case bufferClosed
   case unexpectedEOF
+  case scratchFileDirectoryNotFound(path: String)
+  case missingFileSystem
+  case scratchFileMemoryExceeded
 }
 
 extension IOError: CustomStringConvertible {
@@ -29,6 +32,12 @@ extension IOError: CustomStringConvertible {
       return "Buffer already closed"
     case .unexpectedEOF:
       return "Unexpectedly reached end of file"
+    case .scratchFileDirectoryNotFound(let path):
+      return "Scratch file directory does not exist: \(path)"
+    case .missingFileSystem:
+      return "A FileSystem object must be provided"
+    case .scratchFileMemoryExceeded:
+      return "Maximum allowed scratch file memory exceeded."
     }
   }
 }
