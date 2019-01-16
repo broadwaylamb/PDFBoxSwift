@@ -49,6 +49,12 @@ public class FilterOutputStream: OutputStream {
     try out.write(byte: byte)
   }
 
+  public func write(bytes: UnsafeBufferPointer<UInt8>,
+                    offset: Int,
+                    count: Int) throws {
+    try out.write(bytes: bytes, offset: offset, count: count)
+  }
+
   /// Flushes this output stream and forces any buffered output bytes to be
   /// written out to the stream.
   /// The `flush` method of `FilterOutputStream` calls the `flush` method of

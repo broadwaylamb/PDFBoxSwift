@@ -15,6 +15,31 @@ public protocol Writer: AnyObject {
   /// - Parameter byte: The byte.
   func write(byte: UInt8) throws
 
+  /// Writes `count` bytes from the specified buffer of bytes starting
+  /// at `offset` to this output stream. The general contract for
+  /// `write(bytes:offset:count:)` is that some of the bytes in the collection
+  /// are written to the output stream in order; element `bytes[offset]`
+  /// is the first byte written and bytes[offset + count - 1] is the last byte
+  /// written by this operation.
+  ///
+  /// The default implementation calls the `write(byte:)` method on each of
+  /// the byte to be written out. You can override
+  /// this method to provide a more efficient implementation.
+  ///
+  /// If `offset` is negative, or `count` is negative, or `offset + count` is
+  /// greater than `bytes.count`, then a runtime error occurs.
+  ///
+  /// **Required**
+  ///
+  /// - Parameters:
+  ///   - bytes: The data.
+  ///   - offset: The start offset in the data.
+  ///   - count: The number of bytes to write.
+  func write(bytes: UnsafeBufferPointer<UInt8>, offset: Int, count: Int) throws
+}
+
+extension Writer {
+
   /// Writes `count` bytes from the specified collection of bytes starting
   /// at `offset` to this output stream. The general contract for
   /// `write(bytes:offset:count:)` is that some of the bytes in the collection
@@ -38,38 +63,11 @@ public protocol Writer: AnyObject {
   ///   - bytes: The data.
   ///   - offset: The start offset in the data.
   ///   - count: The number of bytes to write.
-  func write<Bytes: Collection>(bytes: Bytes, offset: Int, count: Int) throws
-      where Bytes.Element == UInt8
-
-  /// Writes `count` bytes from the specified buffer of bytes starting
-  /// at `offset` to this output stream. The general contract for
-  /// `write(bytes:offset:count:)` is that some of the bytes in the collection
-  /// are written to the output stream in order; element `bytes[offset]`
-  /// is the first byte written and bytes[offset + count - 1] is the last byte
-  /// written by this operation.
-  ///
-  /// The default implementation calls the `write(byte:)` method on each of
-  /// the byte to be written out. You can override
-  /// this method to provide a more efficient implementation.
-  ///
-  /// If `offset` is negative, or `count` is negative, or `offset + count` is
-  /// greater than `bytes.count`, then a runtime error occurs.
-  ///
-  /// **Required**. Default implementation provided.
-  ///
-  /// - Parameters:
-  ///   - bytes: The data.
-  ///   - offset: The start offset in the data.
-  ///   - count: The number of bytes to write.
-  func write(bytes: UnsafeBufferPointer<UInt8>, offset: Int, count: Int) throws
-}
-
-extension Writer {
   public func write<Bytes: Collection>(
     bytes: Bytes,
     offset: Int,
     count: Int
-    ) throws where Bytes.Element == UInt8 {
+  ) throws where Bytes.Element == UInt8 {
 
     precondition(
       offset >= 0 &&
@@ -117,27 +115,6 @@ extension Writer {
     while i < end {
       try write(byte: bytes[i])
       bytes.formIndex(after: &i)
-    }
-  }
-
-  public func write(bytes: UnsafeBufferPointer<UInt8>,
-                    offset: Int,
-                    count: Int) throws {
-
-    precondition(
-      offset >= 0 &&
-        offset < bytes.count &&
-        count >= 0 &&
-        (offset + count) <= bytes.count,
-      "Index out of bounds"
-    )
-
-    var i = offset
-    let end = offset + count
-
-    while i < end {
-      try write(byte: bytes[i])
-      i += 1
     }
   }
 

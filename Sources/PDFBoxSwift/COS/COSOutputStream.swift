@@ -42,21 +42,9 @@ public final class COSOutputStream: FilterOutputStream {
     }
   }
 
-  public func write<Bytes: Collection>(
-    bytes: Bytes,
-    offset: Int,
-    count: Int
-  ) throws where Bytes.Element == UInt8 {
-    if let buffer = buffer {
-      try buffer.write(bytes: bytes, offset: offset, count: count)
-    } else {
-      try super.write(bytes: bytes, offset: offset, count: count)
-    }
-  }
-
-  public func write(bytes: UnsafeBufferPointer<UInt8>,
-                    offset: Int,
-                    count: Int) throws {
+  public override func write(bytes: UnsafeBufferPointer<UInt8>,
+                             offset: Int,
+                             count: Int) throws {
     if let buffer = buffer {
       try buffer.write(bytes: bytes, offset: offset, count: count)
     } else {

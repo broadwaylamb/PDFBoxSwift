@@ -34,22 +34,9 @@ public final class COSStandardOutputStream: FilterOutputStream {
     super.init(out: out)
   }
 
-  /// This will write some bytes to the stream.
-  ///
-  /// - Parameters:
-  ///   - bytes: The source collection of bytes.
-  ///   - offset: The offset into the collection to start writing.
-  ///   - count: The number of bytes to write.
-  public func write<Bytes>(bytes: Bytes, offset: Int, count: Int) throws
-      where Bytes: Collection, Bytes.Element == UInt8 {
-    isOnNewLine = false
-    try out.write(bytes: bytes, offset: offset, count: count)
-    position += UInt64(count)
-  }
-
-  public func write(bytes: UnsafeBufferPointer<UInt8>,
-                    offset: Int,
-                    count: Int) throws {
+  public override func write(bytes: UnsafeBufferPointer<UInt8>,
+                             offset: Int,
+                             count: Int) throws {
     isOnNewLine = false
     try out.write(bytes: bytes, offset: offset, count: count)
     position += UInt64(count)

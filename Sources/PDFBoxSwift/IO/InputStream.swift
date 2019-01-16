@@ -35,7 +35,7 @@ public protocol InputStream: Closeable {
   /// because the stream is at end of file, `nil` is returned; otherwise, at
   /// least one byte is read and stored into `buffer`.
   ///
-  /// **Required**. Default implementation provided.
+  /// **Required**.
   ///
   /// - Parameters:
   ///   - buffer: The buffer into which the data is read.
@@ -150,33 +150,6 @@ public protocol InputStream: Closeable {
 }
 
 extension InputStream {
-
-  public func read(into buffer: UnsafeMutableBufferPointer<UInt8>,
-                   offset: Int,
-                   count: Int) throws -> Int? {
-
-    precondition(offset >= 0 && count >= 0 || count > buffer.count - offset,
-                 "Index out of bounds")
-
-    guard count > 0 else {
-      return 0
-    }
-
-    guard let byte = try read() else {
-      return nil
-    }
-
-    buffer[offset] = byte
-
-    var i = 1
-    while i < count {
-      guard let c = try read() else { break }
-      buffer[offset + i] = c
-      i += 1
-    }
-
-    return i
-  }
 
   public func skip(_ n: Int) throws -> Int {
 
