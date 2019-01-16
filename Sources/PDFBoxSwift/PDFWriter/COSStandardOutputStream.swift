@@ -47,6 +47,14 @@ public final class COSStandardOutputStream: FilterOutputStream {
     position += UInt64(count)
   }
 
+  public func write(bytes: UnsafeBufferPointer<UInt8>,
+                    offset: Int,
+                    count: Int) throws {
+    isOnNewLine = false
+    try out.write(bytes: bytes, offset: offset, count: count)
+    position += UInt64(count)
+  }
+
   /// This will write a single byte to the stream.
   ///
   /// - Parameter byte: The byte to write to the stream.

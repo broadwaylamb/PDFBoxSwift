@@ -5,7 +5,7 @@
 //  Created by Sergej Jaskiewicz on 16/01/2019.
 //
 
-public protocol RandomAccessFile: RandomAccessRead, InputStream, OutputStream {
+public protocol RandomAccessFile: RandomAccess, InputStream, OutputStream {
 
   var path: String { get }
 
@@ -13,4 +13,12 @@ public protocol RandomAccessFile: RandomAccessRead, InputStream, OutputStream {
   ///
   /// - Parameter newSize: The new size of the file.
   func truncate(newSize: UInt64) throws
+}
+
+extension RandomAccessFile {
+
+  public func clear() throws {
+    try seek(position: 0)
+    try truncate(newSize: 0)
+  }
 }

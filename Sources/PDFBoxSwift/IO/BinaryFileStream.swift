@@ -16,7 +16,15 @@ import Glibc
 public class BinaryFileStream: Closeable {
 
   internal var fileLength: UInt64 = 0
-  internal var fileOffset: UInt64 = 0
+
+  internal var fileOffset: UInt64 = 0 {
+    didSet {
+      if fileOffset > fileLength {
+        fileLength = fileOffset
+      }
+    }
+  }
+
   private var raw: UnsafeMutablePointer<FILE>?
 
   public final let path: String
@@ -119,6 +127,7 @@ public class BinaryFileStream: Closeable {
     try withUnsafeFileDescriptor { fd -> Void in
       try wrapSyscall { ftruncate(fd, Int64(clamping: newSize)) }
     }
+    fileLength = newSize
   }
 
   // MARK: Reading

@@ -12,6 +12,12 @@ public final class BinaryFileExtendedOutputStream: BinaryFileStream,
 
   public override init(path: String) throws {
     try super.init(path: path)
+    do {
+      fileLength = try UInt64(getStat(path).st_size)
+    } catch {
+      // If stat fails, the file probably doesn't exist,
+      // open(mode:) will create an empty file.
+    }
     try open(mode: BinaryFileExtendedOutputStream.mode)
   }
 
