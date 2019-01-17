@@ -5,9 +5,6 @@
 //  Created by Sergej Jaskiewicz on 09/01/2019.
 //
 
-@available(*, deprecated, renamed: "COSVisitorProtocol")
-public typealias ICOSVisitor = COSVisitorProtocol
-
 /// An interface for visiting a PDF document at the type (COS) level.
 public protocol COSVisitorProtocol {
 
@@ -52,6 +49,12 @@ public protocol COSVisitorProtocol {
   /// - Parameter null: The object that is being visited.
   /// - Returns: Any value depending on the visitor implementation, or `nil`
   func visit(_ null: COSNull) throws -> Any?
+
+  /// Notification of visit to stream object.
+  ///
+  /// - Parameter stream: The stream that is being visited.
+  /// - Returns: Any value depending on the visitor implementation, or `nil`
+  func visit(_ stream: COSStream) throws -> Any?
 
   /// Notification of visit to string object.
   ///

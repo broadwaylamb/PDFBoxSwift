@@ -84,9 +84,9 @@ private final class LinkedListStorage<Element> {
   }
 }
 
-/// A double-ended queue.
+/// A doubly-linked list.
 ///
-/// All enqueuing and dequeuing operations are O(1).
+/// All appending and prepending operations are O(1).
 internal struct LinkedList<Element> {
 
   private let isReversed: Bool
@@ -240,7 +240,7 @@ extension LinkedList: Equatable where Element: Equatable {
       return false
     }
 
-    return zip(lhs, rhs).allSatisfy(==)
+    return lhs.elementsEqual(rhs)
   }
 }
 

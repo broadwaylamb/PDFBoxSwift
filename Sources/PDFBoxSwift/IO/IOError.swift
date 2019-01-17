@@ -15,6 +15,8 @@ public enum IOError: Error, Hashable {
   case scratchFileDirectoryNotFound(path: String)
   case missingFileSystem
   case scratchFileMemoryExceeded
+  case streamClosed
+  case unknownFilter(COSName)
 }
 
 extension IOError: CustomStringConvertible {
@@ -38,6 +40,13 @@ extension IOError: CustomStringConvertible {
       return "A FileSystem object must be provided"
     case .scratchFileMemoryExceeded:
       return "Maximum allowed scratch file memory exceeded."
+    case .streamClosed:
+      return """
+      COSStream has been closed and cannot be read. \
+      Perhaps its enclosing PDFDocument has been closed?
+      """
+    case .unknownFilter(let name):
+      return "Invalid filter: \(name)"
     }
   }
 }

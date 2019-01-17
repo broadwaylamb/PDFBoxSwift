@@ -36,6 +36,12 @@ extension Int32: ConvertibleToCOS {
   }
 }
 
+extension UInt64: ConvertibleToCOS {
+  public var cosRepresentation: COSInteger {
+    return COSInteger.get(Int(clamping: self))
+  }
+}
+
 extension Float: ConvertibleToCOS {
   public var cosRepresentation: COSFloat {
     return COSFloat(value: self)

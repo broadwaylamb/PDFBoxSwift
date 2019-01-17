@@ -31,7 +31,13 @@ extension Int: ConvertibleFromCOS {
 
 extension Int32: ConvertibleFromCOS {
   public init(cosRepresentation: COSInteger) {
-    self.init(truncatingIfNeeded: cosRepresentation.intValue)
+    self.init(clamping: cosRepresentation.intValue)
+  }
+}
+
+extension UInt64: ConvertibleFromCOS {
+  public init(cosRepresentation: COSInteger) {
+    self.init(clamping: cosRepresentation.intValue)
   }
 }
 

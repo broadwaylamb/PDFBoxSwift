@@ -18,6 +18,16 @@ public struct TypedCOSName<T> {
 
 // MARK: - PDF spec: Table 5 – Entries common to all stream dictionaries
 
+extension TypedCOSName where T == UInt64 {
+  /// *(Required)* The number of bytes from the beginning of the line following
+  /// the keyword **stream** to the last byte just before the keyword
+  /// **endstream**. (There may be an additional EOL marker, preceding
+  /// **endstream**, that is not included in the count and is not logically
+  /// part of the stream data.)
+  /// See PDF spec 7.3.8.2, "Stream Extent", for further discussion.
+  public static let length = TypedCOSName(key: .length)
+}
+
 extension TypedCOSName where T == Int {
 
   /// *(Required)* The number of bytes from the beginning of the line following

@@ -343,6 +343,12 @@ public final class COSWriter: COSVisitorProtocol {
     return nil
   }
 
+  @discardableResult
+  public func visit(_ stream: COSStream) throws -> Any? {
+    // TODO
+    fatalError()
+  }
+
   public func writeReference(_ object: COSBase) throws {
     let key = self.key(for: object)
     try standardOutput.write(number: key.number)
@@ -355,7 +361,7 @@ public final class COSWriter: COSVisitorProtocol {
   @discardableResult
   public func visit(_ string: COSString) throws -> Any? {
     // TODO
-    return nil
+    fatalError()
   }
 
   private func addObjectToWrite(_ object: COSBase) {

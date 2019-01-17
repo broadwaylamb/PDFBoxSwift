@@ -208,6 +208,21 @@ extension InputStream {
   ) throws -> Int? {
     return try read(into: buffer, offset: 0, count: buffer.count)
   }
+
+  /// Copies all the contents from `self` to the given output stream.
+  ///
+  /// - Parameter output: The output stream.
+  /// - Returns: The number of bytes that have been copied.
+  @discardableResult
+  public func copy(to output: OutputStream) throws -> UInt64  {
+    let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: 4096)
+    defer { buffer.deallocate() }
+    var count: UInt64 = 0
+    while let bytesRead = try read(into: buffer) {
+      count += UInt64(bytesRead)
+    }
+    return count
+  }
 }
 
 /// Used to determine the maximum buffer size to use when skipping.
