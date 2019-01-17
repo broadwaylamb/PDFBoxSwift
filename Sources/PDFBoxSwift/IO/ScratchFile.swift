@@ -406,15 +406,33 @@ public final class ScratchFile: Closeable {
         return
       }
 
+      var error: Error?
+
       if let raf = value.raf {
-        try raf.close()
-        try getFileSystem().deleteFile(path: raf.path)
+        do {
+          try raf.close()
+        } catch let e {
+          error = e
+        }
+
+        do {
+          try getFileSystem().deleteFile(path: raf.path)
+        } catch let e {
+          if error == nil {
+            error = e
+          }
+        }
+
         value.raf = nil
       }
 
       value.isClosed = true
       value.freePages.clear()
       value.pageCount = 0
+
+      if let error = error {
+        throw error
+      }
     }
   }
 }

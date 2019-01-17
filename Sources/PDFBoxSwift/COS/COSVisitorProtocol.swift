@@ -26,6 +26,12 @@ public protocol COSVisitorProtocol {
   /// - Returns: Any value depending on the visitor implementation, or `nil`
   func visit(_ dictionary: COSDictionary) throws -> Any?
 
+  /// Notification of visit to document object.
+  ///
+  /// - Parameter document: The document object that is being visited.
+  /// - Returns: Any value depending on the visitor implementation, or `nil`
+  func visit(_ document: COSDocument) throws -> Any?
+
   /// Notification of visit to float object.
   ///
   /// - Parameter float: The float object that is being visited.

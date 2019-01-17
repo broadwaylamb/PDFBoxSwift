@@ -17,6 +17,7 @@ public enum IOError: Error, Hashable {
   case scratchFileMemoryExceeded
   case streamClosed
   case unknownFilter(COSName)
+  case missingCatalog
 }
 
 extension IOError: CustomStringConvertible {
@@ -47,6 +48,8 @@ extension IOError: CustomStringConvertible {
       """
     case .unknownFilter(let name):
       return "Invalid filter: \(name)"
+    case .missingCatalog:
+      return "Catalog cannot be found"
     }
   }
 }

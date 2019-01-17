@@ -12,7 +12,12 @@ public struct COSObjectKey: Hashable {
   public let number: Int
 
   /// The generation number.
-  public var generation: Int
+  public var generation: Int {
+    didSet {
+      precondition(generation >= 0,
+                   "A generation number must be nonnegative")
+    }
+  }
 
   /// Constructor.
   ///
@@ -20,6 +25,10 @@ public struct COSObjectKey: Hashable {
   ///   - number: The object number.
   ///   - generation: The object generation number.
   public init(number: Int, generation: Int) {
+    precondition(number > 0,
+                 "An object number must be positive")
+    precondition(generation >= 0,
+                 "A generation number must be nonnegative")
     self.number = number
     self.generation = generation
   }

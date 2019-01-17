@@ -197,7 +197,10 @@ public final class COSWriter: COSVisitorProtocol {
         }
       case let current as COSObject:
         let subValue = current.object
-        if willEncrypt || incrementalUpdate || subValue is COSDictionary {
+        if willEncrypt ||
+           incrementalUpdate ||
+           subValue is COSDictionary ||
+           subValue == nil {
 
           // https://issues.apache.org/jira/browse/PDFBOX-4308
           // added willEncrypt to prevent an object
@@ -207,7 +210,7 @@ public final class COSWriter: COSVisitorProtocol {
           addObjectToWrite(current)
           try writeReference(current)
         } else {
-          try subValue.accept(visitor: self)
+          try subValue!.accept(visitor: self)
         }
       case nil, is COSNull:
         try COSNull.null.accept(visitor: self)
@@ -280,7 +283,11 @@ public final class COSWriter: COSVisitorProtocol {
           try writeReference(value)
         }
       case let value as COSObject:
-        if willEncrypt || incrementalUpdate || value.object is COSDictionary {
+        let subValue = value.object
+        if willEncrypt ||
+           incrementalUpdate ||
+           value.object is COSDictionary ||
+           subValue == nil {
 
           // https://issues.apache.org/jira/browse/PDFBOX-4308
           // added willEncrypt to prevent an object
@@ -290,7 +297,7 @@ public final class COSWriter: COSVisitorProtocol {
           addObjectToWrite(value)
           try writeReference(value)
         } else {
-          try value.object.accept(visitor: self)
+          try subValue!.accept(visitor: self)
         }
       default:
         // If we reach the PDF signature, we need to determinate the position
@@ -317,6 +324,12 @@ public final class COSWriter: COSVisitorProtocol {
     try standardOutput.writeEOL()
     
     return nil
+  }
+
+  @discardableResult
+  public func visit(_ document: COSDocument) throws -> Any? {
+    // TODO
+    fatalError()
   }
 
   @discardableResult

@@ -11,7 +11,7 @@ public final class COSObject: COSBase, COSUpdateInfo {
   public var needsToBeUpdated: Bool = false
 
   /// The object that this object refers to.
-  public var object: COSBase
+  public var object: COSBase?
 
   /// The object number. Must be positive.
   public var objectNumber: Int {
@@ -35,7 +35,7 @@ public final class COSObject: COSBase, COSUpdateInfo {
   ///   - object: The object that this object refers to.
   ///   - objectNumber: The object number. Must be positive.
   ///   - generationNumber: The generation number. Must be nonnegative.
-  public init(object: COSBase,
+  public init(object: COSBase?,
               objectNumber: Int = 0,
               generationNumber: Int = 0) {
     self.object = object
@@ -51,7 +51,11 @@ public final class COSObject: COSBase, COSUpdateInfo {
 
   @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
-    return try object.accept(visitor: visitor)
+    if let object = object {
+      return try object.accept(visitor: visitor)
+    } else {
+      return try COSNull.null.accept(visitor: visitor)
+    }
   }
 
   public override var debugDescription: String {

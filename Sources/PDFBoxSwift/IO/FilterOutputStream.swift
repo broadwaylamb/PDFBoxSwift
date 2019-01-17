@@ -76,7 +76,23 @@ public class FilterOutputStream: OutputStream {
 
     isClosed = true
 
-    try flush()
-    try out.close()
+    var error: Error?
+    do {
+      try flush()
+    } catch let e {
+      error = e
+    }
+
+    do {
+      try out.close()
+    } catch let e {
+      if error == nil {
+        error = e
+      }
+    }
+
+    if let error = error {
+      throw error
+    }
   }
 }
