@@ -25,13 +25,19 @@ extension Bool: ConvertibleFromCOS {
 
 extension Int: ConvertibleFromCOS {
   public init(cosRepresentation: COSInteger) {
-    self = cosRepresentation.intValue
+    self.init(clamping: cosRepresentation.intValue)
   }
 }
 
 extension Int32: ConvertibleFromCOS {
   public init(cosRepresentation: COSInteger) {
     self.init(clamping: cosRepresentation.intValue)
+  }
+}
+
+extension Int64: ConvertibleFromCOS {
+  public init(cosRepresentation: COSInteger) {
+    self.init(cosRepresentation.intValue)
   }
 }
 

@@ -176,6 +176,7 @@ public final class COSDocument: COSBase, Closeable {
     return Array(objectPool.values)
   }
 
+  @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try visitor.visit(self)
   }

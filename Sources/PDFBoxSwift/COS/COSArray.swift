@@ -168,7 +168,7 @@ extension COSArray {
   /// - Parameters:
   ///   - number: The index of the array.
   ///   - index: The integer to set.
-  public func set(_ number: Int, at index: Int) {
+  public func set(_ number: Int64, at index: Int) {
     set(COSInteger.get(number), at: index)
   }
 
@@ -213,7 +213,7 @@ extension COSArray {
   ///
   /// - Parameter index: The index of the array.
   /// - Returns: The integer value at that index or `nil` if does not exist.
-  public func getInt(at index: Int) -> Int? {
+  public func getInt(at index: Int) -> Int64? {
     guard objects.indices.contains(index) else {
       return nil
     }

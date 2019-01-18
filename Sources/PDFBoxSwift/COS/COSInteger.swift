@@ -15,17 +15,19 @@ public final class COSInteger: COSNumber, ConvertibleToCOS {
   private static let high = 256
 
   /// Static instances of all `COSInteger`s in the range from `low` to `high`.
-  private static let staticInts = (low...high).map(COSInteger.init)
+  private static let staticInts = (low...high).map {
+    COSInteger(value: Int64($0))
+  }
 
   /// Returns a `COSInteger` instance with the given value.
   ///
   /// - Parameter value: Integer value.
   /// - Returns: A `COSInteger` instance.
-  public static func get(_ value: Int) -> COSInteger {
-    if (low...high).contains(value) {
-      return staticInts[value - low]
+  public static func get<T: BinaryInteger>(_ value: T) -> COSInteger {
+    if (low...high).contains(Int(value)) {
+      return staticInts[Int(value) - low]
     } else {
-      return COSInteger(value: value)
+      return COSInteger(value: Int64(value))
     }
   }
 
@@ -41,9 +43,9 @@ public final class COSInteger: COSNumber, ConvertibleToCOS {
   /// Constant for the number three.
   public static let three = get(3)
 
-  private let value: Int
+  private let value: Int64
 
-  private init(value: Int) {
+  private init(value: Int64) {
     self.value = value
   }
 
@@ -64,7 +66,7 @@ public final class COSInteger: COSNumber, ConvertibleToCOS {
     return Double(value)
   }
 
-  public override var intValue: Int {
+  public override var intValue: Int64 {
     return value
   }
 
@@ -78,7 +80,7 @@ public final class COSInteger: COSNumber, ConvertibleToCOS {
   /// - Parameter output: The stream to write to.
   /// - Throws: Any error the stream throws during writing.
   public func writePDF(_ output: OutputStream) throws {
-    try output.write(utf8: String(value))
+    try output.write(number: value)
   }
 
   public var cosRepresentation: COSInteger {

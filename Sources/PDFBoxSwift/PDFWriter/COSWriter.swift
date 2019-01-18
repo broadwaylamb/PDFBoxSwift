@@ -6,7 +6,7 @@
 //
 
 /// This class acts on an in-memory representation of a PDF document.
-public final class COSWriter: COSVisitorProtocol {
+open class COSWriter: COSVisitorProtocol {
 
   // MARK: - Tokens
 
@@ -76,7 +76,7 @@ public final class COSWriter: COSVisitorProtocol {
   private let standardOutput: COSStandardOutputStream
 
   /// The start position of the x ref section
-  private var startxref = 0
+  private var startxref: UInt64 = 0
 
   /// The current object number.
   private var number = 0
@@ -90,6 +90,9 @@ public final class COSWriter: COSVisitorProtocol {
   ///
   /// Used for indirect references in other objects.
   private var keyObject = [COSObjectKey : COSBase]()
+
+  /// The list of x ref entries made so far
+  private var xRefEntries = [COSWriterXRefEntry]()
 
   private var objectsToWriteSet = Set<COSBase>()
 
@@ -107,6 +110,9 @@ public final class COSWriter: COSVisitorProtocol {
   /// the actual for that object, so we will track
   /// actuals separately.
   private var actualsAdded = Set<COSBase>()
+
+  private var currentObjectKey: COSObjectKey?
+  private var document: Either<PDFDocument, FDFDocument>?
 
   private var willEncrypt = false
 
@@ -126,6 +132,8 @@ public final class COSWriter: COSVisitorProtocol {
 
   private var incremental: Incremental?
   private var incrementalUpdate = false
+  private var signer: Signer?
+  private var incrementPart = [UInt8]()
   private var byteRangeArray = COSArray()
 
   /// `COSWriter` constructor.
@@ -162,6 +170,296 @@ public final class COSWriter: COSVisitorProtocol {
     try? close()
   }
 
+  private func doWriteObject(_ object: COSBase) throws {
+
+    writtenObjects.insert(object)
+
+    // find the physical reference
+    let key = self.key(for: object)
+    currentObjectKey = key
+    addXRefEntry(COSWriterXRefEntry(start: standardOutput.position,
+                                    object: object,
+                                    key: key))
+    // write the object
+    try standardOutput.write(number: key.number)
+    try standardOutput.write(bytes: COSWriter.space)
+    try standardOutput.write(number: key.generation)
+    try standardOutput.write(bytes: COSWriter.space)
+    try standardOutput.write(bytes: COSWriter.obj)
+    try standardOutput.writeEOL()
+    try object.accept(visitor: self)
+    try standardOutput.writeEOL()
+    try standardOutput.write(bytes: COSWriter.endobj)
+    try standardOutput.writeEOL()
+  }
+
+  private func doWriteHeader(for document: COSDocument) throws {
+
+    let headerString: String
+
+    switch self.document {
+    case .right?:
+      headerString = "%FDF-\(document.version.rawValue)"
+    default:
+      headerString = "%PDF-\(document.version.rawValue)"
+    }
+
+    try standardOutput.write(utf8: headerString)
+    try standardOutput.writeEOL()
+    try standardOutput.write(bytes: COSWriter.comment)
+    try standardOutput.write(bytes: COSWriter.garbage)
+    try standardOutput.writeEOL()
+  }
+
+  private func doWriteTrailer(for document: COSDocument) throws {
+    try standardOutput.write(bytes: COSWriter.trailer)
+    try standardOutput.writeEOL()
+
+    // sort xref, needed only if object keys not regenerated
+    xRefEntries.sort()
+
+    document.trailer?[native: .trailerSize] = xRefEntries.last
+      .map { $0.key.number + 1 }
+
+    // Only need to stay, if an incremental update will be performed
+    if !incrementalUpdate {
+      document.trailer?[native: .prev] = nil
+    }
+    if !document.isXRefStream {
+      document.trailer?[native: .xRefStm] = nil
+    }
+
+    // Remove a checksum if present
+    document.trailer?[.docChecksum] = nil
+
+    try document.trailer?.accept(visitor: self)
+  }
+
+  private func doWriteXRefInc(for document: COSDocument,
+                              hybridPrev: Int64) throws {
+    if document.isXRefStream || hybridPrev != -1 {
+
+      // the file uses XrefStreams, so we need to update
+      // it with an xref stream. We create a new one and fill it
+      // with data available here
+
+      // TODO
+      fatalError("XRef streams are not implemented yet")
+    }
+
+    if !document.isXRefStream || hybridPrev != -1 {
+      document.trailer?[native: .prev] = document.startXref
+      if hybridPrev != -1 {
+        document.trailer?[native: .xRefStm] = Int64(document.startXref)
+      }
+      try doWriteXRefTable()
+      try doWriteTrailer(for: document)
+    }
+  }
+
+  private func doWriteXRefTable() throws {
+    addXRefEntry(.nullEntry)
+
+    // sort xref, needed only if object keys not regenerated
+    xRefEntries.sort()
+
+    // remember the position where the xref was written
+    startxref = standardOutput.position
+
+    try standardOutput.write(bytes: COSWriter.xref)
+    try standardOutput.writeEOL()
+
+    // write start object number and object count for this x ref section
+    // we assume starting from scratch
+    let xRefRanges = self.xRefRanges(for: xRefEntries)
+
+    var entryIndex = 0
+    for (firstObjectNumber, numberOfEntries) in xRefRanges {
+      try writeXRefRange(firstObjectNumber: firstObjectNumber,
+                         numberOfEntries: numberOfEntries)
+
+      for _ in 0..<numberOfEntries {
+        try writeXrefEntry(xRefEntries[entryIndex])
+        entryIndex += 1
+      }
+    }
+  }
+
+  /// Write an incremental update for a non signature case.
+  /// This can be used for e.g. augmenting signatures.
+  private func doWriteIncrement() throws {
+     if let input = incremental?.input,
+        let output = incremental?.output,
+        let byteArray = self.output as? ByteArrayOutputStream {
+      // write existing PD
+      try RandomAccessInputStream(read: input).copy(to: output)
+      // write the actual incremental update
+      try output.write(bytes: byteArray.bytes)
+    }
+  }
+
+  private func doWriteSignature() throws {
+
+    guard let incremental = self.incremental,
+          let output = self.output as? ByteArrayOutputStream else { return }
+
+    // calculate the ByteRange values
+    let inLength = try incremental.input.count()
+    let beforeLength = signatureOffset
+    let afterOffset = signatureOffset + signatureLength
+    let afterLength = standardOutput.position - afterOffset
+
+    let byteRange = "0 \(beforeLength) \(afterOffset) \(afterLength)]"
+
+    // Assign the values to the actual COSArray, so that the user can access it
+    // before closing
+    if byteRangeArray.count >= 4 {
+      byteRangeArray[0] = COSInteger.zero
+      byteRangeArray[1] = COSInteger.get(beforeLength)
+      byteRangeArray[2] = COSInteger.get(afterOffset)
+      byteRangeArray[3] = COSInteger.get(afterLength)
+    } else {
+      throw IOError.cannotWriteNewByteRange(byteRange: byteRange,
+                                            maxLength: byteRangeLength)
+    }
+
+    if byteRange.count > byteRangeLength {
+      throw IOError.cannotWriteNewByteRange(byteRange: byteRange,
+                                            maxLength: byteRangeLength)
+    }
+
+    // copy the new incremental data into a buffer
+    // (e.g. signature dict, trailer)
+    try output.flush()
+    incrementPart = output.bytes
+
+    // overwrite the ByteRange in the buffer
+    let byteRangeBytes = Array(byteRange.utf8)
+    for i in 0..<byteRangeLength {
+      incrementPart[Int(byteRangeOffset + i - inLength)] =
+          i >= byteRangeBytes.count ? 0x20 : byteRangeBytes[Int(i)]
+    }
+
+    if let signer = signer {
+      let dataToSign = try getDataToSign()
+      let signatureBytes = try signer.sign(content: dataToSign)
+      try writeExternalSignature(signatureBytes)
+    }
+
+    // else signature should be created externally and set via
+    // writeSignature()
+  }
+
+  /// Returns the stream of PDF data to be signed. Clients should use this
+  /// method only to create signatures externally. `write(document:)` method
+  /// should have been called prior. The created signature should be set using
+  /// `writeExternalSignature(_:)`.
+  ///
+  /// When `Signer` instance is used, `COSWriter` obtains and writes
+  /// the signature itself.
+  ///
+  /// - Returns: Data stream to be signed.
+  open func getDataToSign() throws -> InputStream {
+    guard let incremental = incremental else {
+      preconditionFailure("PDF not prepared for signing")
+    }
+
+    // range of incremental bytes to be signed
+    // (includes /ByteRange but not /Contents)
+    let incPartSigOffset = try signatureOffset - incremental.input.count()
+    let afterSigOffset = incPartSigOffset + signatureLength
+    let afterSigCount = UInt64(incrementPart.count) - afterSigOffset
+
+    let ranges = [
+      (offset: 0,              count: incPartSigOffset),
+      (offset: afterSigOffset, count: afterSigCount)
+    ]
+
+    return SequenceInputStream(
+      RandomAccessInputStream(read: incremental.input),
+      COSFilterInputStream(input: incrementPart, byteRanges: ranges)
+    )
+  }
+
+  /// Write externally created signature of PDF data obtained via
+  /// `getDataToSign()` method.
+  ///
+  /// - Parameter cmsSignature: CMS signature byte array.
+  open func writeExternalSignature(_ cmsSignature: [UInt8]) throws {
+    guard !incrementPart.isEmpty,
+          let incrementalInput = incremental?.input,
+          let incrementalOutput = incremental?.output else {
+      preconditionFailure("PDF not prepared for setting signature")
+    }
+
+    let signatureBytes = cmsSignature.flatMap { $0.pdfBoxASCIIHex }
+
+    // substract 2 bytes because of the enclosing "<>"
+    guard signatureBytes.count <= signatureLength - 2 else {
+      throw IOError
+        .cannotWriteSignature(expectedLength: Int(signatureLength - 2),
+                              actualLength: signatureBytes.count)
+    }
+
+    // overwrite the signature Contents in the buffer
+    let incPartSigOffset = try Int(signatureOffset - incrementalInput.count())
+    incrementPart.replaceSubrange(
+      incPartSigOffset + 1 ..< incPartSigOffset + 1 + signatureBytes.count,
+      with: signatureBytes
+    )
+
+    // write the data to the incremental output stream
+    try RandomAccessInputStream(read: incrementalInput)
+      .copy(to: incrementalOutput)
+    try incrementalOutput.write(bytes: incrementPart)
+
+    // prevent furtherUse
+    incrementPart = []
+  }
+
+  private func writeXRefRange(firstObjectNumber: Int,
+                              numberOfEntries: Int) throws {
+    try standardOutput.write(number: firstObjectNumber)
+    try standardOutput.write(bytes: COSWriter.space)
+    try standardOutput.write(number: numberOfEntries)
+    try standardOutput.writeEOL()
+  }
+
+  private func writeXrefEntry(_ entry: COSWriterXRefEntry) throws {
+    let offset = String(entry.offset, width: 10)
+    let generation = String(entry.key.generation, width: 5)
+    try standardOutput.write(utf8: offset)
+    try standardOutput.write(bytes: COSWriter.space)
+    try standardOutput.write(utf8: generation)
+    try standardOutput.write(bytes: COSWriter.space)
+    try standardOutput
+      .write(bytes: entry.isFree ? COSWriter.xrefFree : COSWriter.xrefUsed)
+    try standardOutput.writeCRLF()
+  }
+
+  private func xRefRanges(
+    for entries: [COSWriterXRefEntry]
+    ) -> [(firstObjectNumber: Int, numberOfEntries: Int)] {
+
+    var lastObjectNumber = -2
+    var count = 1
+    var array = [(firstObjectNumber: Int, numberOfEntries: Int)]()
+
+    for entry in entries {
+      let objectNumber = entry.key.number
+      if objectNumber == lastObjectNumber + 1 {
+        count += 1
+      } else if lastObjectNumber != -2  {
+        array.append((firstObjectNumber: lastObjectNumber - count + 1,
+                      numberOfEntries: count))
+        count = 1
+      }
+      lastObjectNumber = objectNumber
+    }
+
+    return array
+  }
+
   /// This will get the object key for the object.
   ///
   /// - Parameter object: The object to get the key for.
@@ -183,7 +481,7 @@ public final class COSWriter: COSVisitorProtocol {
   }
 
   @discardableResult
-  public func visit(_ array: COSArray) throws -> Any? {
+  open func visit(_ array: COSArray) throws -> Any? {
 
     try standardOutput.write(bytes: COSWriter.arrayOpen)
     for (i, current) in array.enumerated() {
@@ -234,13 +532,13 @@ public final class COSWriter: COSVisitorProtocol {
   }
 
   @discardableResult
-  public func visit(_ bool: COSBoolean) throws -> Any? {
+  open func visit(_ bool: COSBoolean) throws -> Any? {
     try bool.writePDF(standardOutput)
     return nil
   }
 
   @discardableResult
-  public func visit(_ dictionary: COSDictionary) throws -> Any? {
+  open func visit(_ dictionary: COSDictionary) throws -> Any? {
 
     if !reachedSignature {
       let itemType = dictionary[cos: .type]
@@ -327,42 +625,72 @@ public final class COSWriter: COSVisitorProtocol {
   }
 
   @discardableResult
-  public func visit(_ document: COSDocument) throws -> Any? {
-    // TODO
-    fatalError()
+  open func visit(_ document: COSDocument) throws -> Any? {
+
+    if !incrementalUpdate {
+      try doWriteHeader(for: document)
+    } else {
+      // https://issues.apache.org/jira/browse/PDFBOX-1051
+      // Sometimes the original file will be missing a newline at the end
+      // In order to avoid having %%EOF the first object on the same line
+      // as the %%EOF, we put a newline here. If there's already one at
+      // the end of the file, an extra one won't hurt.
+      try standardOutput.writeCRLF()
+    }
+
+    try doWriteBody(document)
+
+    let hybridPrev = document.trailer?[native: .xRefStm] ?? -1
+
+    if incrementalUpdate || document.isXRefStream {
+      try doWriteXRefInc(for: document, hybridPrev: hybridPrev)
+    } else {
+      try doWriteXRefTable()
+      try doWriteTrailer(for: document)
+    }
+
+    try standardOutput.write(bytes: COSWriter.startXref)
+    try standardOutput.writeEOL()
+    try standardOutput.write(number: startxref)
+    try standardOutput.writeEOL()
+    try standardOutput.write(bytes: COSWriter.eof)
+    try standardOutput.writeEOL()
+
+    if incrementalUpdate {
+      if signatureOffset == 0 || byteRangeOffset == 0 {
+        try doWriteIncrement()
+      } else {
+        try doWriteSignature()
+      }
+    }
+    return nil
   }
 
   @discardableResult
-  public func visit(_ float: COSFloat) throws -> Any? {
+  open func visit(_ float: COSFloat) throws -> Any? {
     try float.writePDF(standardOutput)
     return nil
   }
 
   @discardableResult
-  public func visit(_ int: COSInteger) throws -> Any? {
+  open func visit(_ int: COSInteger) throws -> Any? {
     try int.writePDF(standardOutput)
     return nil
   }
 
   @discardableResult
-  public func visit(_ name: COSName) throws -> Any? {
+  open func visit(_ name: COSName) throws -> Any? {
     try name.writePDF(standardOutput)
     return nil
   }
 
   @discardableResult
-  public func visit(_ null: COSNull) throws -> Any? {
+  open func visit(_ null: COSNull) throws -> Any? {
     try null.writePDF(standardOutput)
     return nil
   }
 
-  @discardableResult
-  public func visit(_ stream: COSStream) throws -> Any? {
-    // TODO
-    fatalError()
-  }
-
-  public func writeReference(_ object: COSBase) throws {
+  open func writeReference(_ object: COSBase) throws {
     let key = self.key(for: object)
     try standardOutput.write(number: key.number)
     try standardOutput.write(bytes: COSWriter.space)
@@ -372,9 +700,55 @@ public final class COSWriter: COSVisitorProtocol {
   }
 
   @discardableResult
-  public func visit(_ string: COSString) throws -> Any? {
-    // TODO
-    fatalError()
+  open func visit(_ stream: COSStream) throws -> Any? {
+    if willEncrypt {
+      // TODO
+      fatalError("Encryption is not implemented yet")
+    }
+
+    try visit(stream as COSDictionary)
+    try standardOutput.write(bytes: COSWriter.stream)
+    try standardOutput.writeCRLF()
+
+    let input = try stream.createRawInputStream()
+    try input.copy(to: standardOutput)
+    try input.close()
+    try standardOutput.writeCRLF()
+    try standardOutput.write(bytes: COSWriter.endstream)
+    try standardOutput.writeEOL()
+    return nil
+  }
+
+  @discardableResult
+  open func visit(_ string: COSString) throws -> Any? {
+    if willEncrypt {
+      // TODO
+      fatalError("Encryption is not implemented yet")
+    }
+    try COSWriter.writeString(string, output: standardOutput)
+    return nil
+  }
+
+  private func doWriteBody(_ document: COSDocument) throws {
+    if let root = document.trailer?[cos: .root] {
+      addObjectToWrite(root)
+    }
+    if let info = document.trailer?[cos: .info] {
+      addObjectToWrite(info)
+    }
+    try doWriteObjects()
+    willEncrypt = false
+    if let encrypt = document.trailer?[cos: .encrypt] {
+      addObjectToWrite(encrypt)
+    }
+    try doWriteObjects()
+  }
+
+  private func doWriteObjects() throws {
+    while let nextObject = objectsToWrite.popFirst() {
+      objectsToWriteSet.remove(nextObject)
+      try doWriteObject(nextObject)
+    }
   }
 
   private func addObjectToWrite(_ object: COSBase) {
@@ -403,10 +777,43 @@ public final class COSWriter: COSVisitorProtocol {
     actualsAdded.insert(actual)
   }
 
+  private func addXRefEntry(_ entry: COSWriterXRefEntry) {
+    xRefEntries.append(entry)
+  }
+
   /// This will close the stream.
   func close() throws {
     try standardOutput.close()
     try incremental?.output.close()
+  }
+
+  /// This will write the PDF document.
+  ///
+  /// - Parameter document: The document to write.
+  open func write(document: COSDocument) throws {
+    try write(document: PDFDocument(document))
+  }
+
+  /// This will write the PDF document. If signature should be created
+  /// externally, `writeExternalSignature(_:)` should be invoked to set
+  /// signature after calling this method.
+  ///
+  /// - Parameters:
+  ///   - document: The document to write.
+  ///   - signer: `Signer` to be used for signing; `nil` if external signing
+  ///             would be performed or there will be no signing at all.
+  open func write(document: PDFDocument, signer: Signer? = nil) throws {
+    // TODO
+    fatalError()
+  }
+
+  /// This will write the FDF document.
+  ///
+  /// - Parameter document: The document to write.
+  open func write(document: FDFDocument) throws {
+    self.document = .right(document)
+    willEncrypt = false
+    try document.cosDocument.accept(visitor: self)
   }
 
   /// This will output the given string as a PDF object.

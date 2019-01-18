@@ -26,7 +26,7 @@ public class COSNumber: COSBase {
   }
 
   /// This will get the integer value of this number.
-  public var intValue: Int {
+  public var intValue: Int64 {
     COSNumber.requiresConcreteImplementation()
   }
 
@@ -42,7 +42,7 @@ public class COSNumber: COSBase {
       let digit = string.utf8.first!
 
       if "0" <= digit && digit <= "9" {
-        return COSInteger.get(Int(digit - "0"))
+        return COSInteger.get(Int64(digit - "0"))
       } else if digit == "-" || digit == "." {
         // See https://issues.apache.org/jira/browse/PDFBOX-592
         return COSInteger.zero
@@ -52,13 +52,13 @@ public class COSNumber: COSBase {
     } else if !string.contains(".") && !string.lowercased().contains("e") {
 
       if string.first == "+" {
-        guard let int = Int(string.dropFirst()) else {
+        guard let int = Int64(string.dropFirst()) else {
           return try COSFloat(string: string)
         }
         return COSInteger.get(int)
       }
 
-      guard let int = Int(string) else {
+      guard let int = Int64(string) else {
         return try COSFloat(string: string)
       }
 

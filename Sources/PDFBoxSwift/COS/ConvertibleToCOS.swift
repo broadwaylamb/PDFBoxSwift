@@ -26,19 +26,25 @@ extension Bool: ConvertibleToCOS {
 
 extension Int: ConvertibleToCOS {
   public var cosRepresentation: COSInteger {
-    return COSInteger.get(self)
+    return COSInteger.get(Int64(self))
   }
 }
 
 extension Int32: ConvertibleToCOS {
   public var cosRepresentation: COSInteger {
-    return COSInteger.get(Int(self))
+    return COSInteger.get(Int64(self))
+  }
+}
+
+extension Int64: ConvertibleToCOS {
+  public var cosRepresentation: COSInteger {
+    return COSInteger.get(self)
   }
 }
 
 extension UInt64: ConvertibleToCOS {
   public var cosRepresentation: COSInteger {
-    return COSInteger.get(Int(clamping: self))
+    return COSInteger.get(Int64(clamping: self))
   }
 }
 

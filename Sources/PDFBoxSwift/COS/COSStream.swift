@@ -35,6 +35,10 @@ public final class COSStream: COSDictionary, Closeable {
     self[native: .length] = 0
   }
 
+  deinit {
+    try? close()
+  }
+
   private func checkClosed() throws {
     if let ra = randomAccess, ra.isClosed {
       throw IOError.streamClosed
@@ -171,7 +175,7 @@ public final class COSStream: COSDictionary, Closeable {
   }
 
   /// The length of the encoded stream.
-  public var length: Int {
+  public var length: UInt64 {
     precondition(!isWriting, """
                  There is an open OutputStream associated with \
                  this COSStream. It must be closed before querying

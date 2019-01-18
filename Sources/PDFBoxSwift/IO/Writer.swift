@@ -147,6 +147,6 @@ extension Writer {
 
   public func writeAsHex<C: Collection>(numbers: C) throws
     where C.Element: FixedWidthInteger & UnsignedInteger {
-      try write(bytes: numbers.lazy.flatMap { $0.pdfBoxASCIIHex })
+      try write(bytes: numbers.flatMap { $0.pdfBoxASCIIHex })
   }
 }

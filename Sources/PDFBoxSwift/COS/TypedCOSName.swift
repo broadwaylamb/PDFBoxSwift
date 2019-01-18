@@ -19,16 +19,6 @@ public struct TypedCOSName<T> {
 // MARK: - PDF spec: Table 5 – Entries common to all stream dictionaries
 
 extension TypedCOSName where T == UInt64 {
-  /// *(Required)* The number of bytes from the beginning of the line following
-  /// the keyword **stream** to the last byte just before the keyword
-  /// **endstream**. (There may be an additional EOL marker, preceding
-  /// **endstream**, that is not included in the count and is not logically
-  /// part of the stream data.)
-  /// See PDF spec 7.3.8.2, "Stream Extent", for further discussion.
-  public static let length = TypedCOSName(key: .length)
-}
-
-extension TypedCOSName where T == Int {
 
   /// *(Required)* The number of bytes from the beginning of the line following
   /// the keyword **stream** to the last byte just before the keyword
@@ -167,6 +157,9 @@ extension TypedCOSName where T == Int {
   /// this value shall be ignored and defined to be missing by a conforming
   /// reader.
   public static let trailerSize = TypedCOSName(key: .size)
+}
+
+extension TypedCOSName where T == UInt64 {
 
   /// *(Present only if the file has more than one cross-reference section;
   /// shall be an indirect reference)*
@@ -219,6 +212,14 @@ extension TypedCOSName where T == COSArray {
   ///         them to decrypt strings, including the **ID** strings themselves.
   ///         The preceding restriction prevents this circular condition.
   public static let id = TypedCOSName(key: .id)
+}
+
+// MARK: - PDF spec: Table 19 – Additional entries in a hybrid-reference file’s trailer dictionary
+extension TypedCOSName where T == Int64 {
+
+  /// *(Optional)* The byte offset in the decoded stream from the beginning of
+  /// the file of a cross-reference stream.
+  public static let xRefStm = TypedCOSName(key: .xRefStm)
 }
 
 // MARK: - PDF spec: Table 252 – Entries in a signature dictionary

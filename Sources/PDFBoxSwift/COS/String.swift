@@ -27,6 +27,35 @@ extension String {
     return self[firstNonWSIndex...lastNonWSIndex]
   }
 
+  internal init<T: BinaryInteger>(_ value: T,
+                                  width: Int,
+                                  radix: Int = 10,
+                                  uppercase: Bool = false) {
+
+    precondition(width >= 0, "width must be positive")
+
+    guard width > 0 else {
+      self.init(value, radix: radix, uppercase: uppercase)
+      return
+    }
+
+    let isNegative = value < 0
+
+    let numberOfDigits = value
+      .numberOfDigits(radix: radix) + (isNegative ? 1 : 0)
+
+    let sign = isNegative ? "-" : String()
+
+    let significantDigits = String(value.magnitude,
+                                   radix: radix,
+                                   uppercase: uppercase)
+
+    let padString = String(repeating: "0",
+                           count: Swift.max(0, width - numberOfDigits))
+
+    self = sign + padString + significantDigits
+  }
+
   internal init<Encoding: Unicode.Encoding>(hex: String,
                                             encodedAs encoding: Encoding.Type,
                                             endianness: Endianness = .host) {

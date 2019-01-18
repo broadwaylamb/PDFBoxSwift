@@ -14,10 +14,14 @@
 /// methods and fields.
 public class FilterInputStream: InputStream {
 
-  private var input: InputStream
+  public let input: InputStream
 
   internal init(input: InputStream) {
     self.input = input
+  }
+
+  deinit {
+    try? close()
   }
 
   public func read() throws -> UInt8? {

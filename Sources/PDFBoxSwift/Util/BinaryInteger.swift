@@ -30,4 +30,17 @@ extension BinaryInteger {
     return self % other == 0
   }
 #endif
+
+  func numberOfDigits(radix: Int = 10) -> Int {
+    guard self != 0 else {
+      return 1
+    }
+    var n = magnitude
+    var count = 0
+    while n > 0 {
+      count += 1
+      n /= numericCast(radix)
+    }
+    return count
+  }
 }

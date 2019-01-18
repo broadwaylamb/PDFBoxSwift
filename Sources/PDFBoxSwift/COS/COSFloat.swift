@@ -59,8 +59,8 @@ public final class COSFloat: COSNumber, ConvertibleToCOS {
     return Double(stringValue) ?? 0
   }
 
-  public override var intValue: Int {
-    return Int(doubleValue)
+  public override var intValue: Int64 {
+    return Int64(doubleValue)
   }
 
   public override func isEqual(_ other: COSBase) -> Bool {

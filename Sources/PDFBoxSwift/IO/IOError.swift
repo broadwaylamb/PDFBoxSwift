@@ -18,6 +18,8 @@ public enum IOError: Error, Hashable {
   case streamClosed
   case unknownFilter(COSName)
   case missingCatalog
+  case cannotWriteNewByteRange(byteRange: String, maxLength: UInt64)
+  case cannotWriteSignature(expectedLength: Int, actualLength: Int)
 }
 
 extension IOError: CustomStringConvertible {
@@ -50,6 +52,13 @@ extension IOError: CustomStringConvertible {
       return "Invalid filter: \(name)"
     case .missingCatalog:
       return "Catalog cannot be found"
+    case .cannotWriteNewByteRange(let byteRange,  let maxLength):
+      return """
+      Can't write new byte range '\(byteRange)', not enough space to fit in \
+      length \(maxLength)"
+      """
+    case .cannotWriteSignature:
+      return "Can't write signature, not enough space"
     }
   }
 }
