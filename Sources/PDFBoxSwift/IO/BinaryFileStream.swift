@@ -236,7 +236,6 @@ private func assertIsNotBlacklistedErrno(
          """)
 }
 
-@inline(__always)
 @discardableResult
 internal func wrapSyscall<T: FixedWidthInteger>(
   where function: StaticString = #function,

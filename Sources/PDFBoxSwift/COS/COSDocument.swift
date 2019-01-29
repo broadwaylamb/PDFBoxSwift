@@ -191,46 +191,25 @@ public final class COSDocument: COSBase, Closeable {
     // - first error is kept
     // - all COSStreams are closed
     // - ScratchFile is closed
-
-    var firstError: Error?
+    var ensure = Ensure()
 
     for object in objects {
       let cosObject = object.object
       if let stream = cosObject as? COSStream {
-        do {
-          try stream.close()
-        } catch {
-          if firstError == nil {
-            firstError = error
-          }
-        }
+        ensure.do { try stream.close() }
       }
     }
 
     for stream in streams {
-      do {
-        try stream.close()
-      } catch {
-        if firstError == nil {
-          firstError = error
-        }
-      }
+      ensure.do { try stream.close() }
     }
 
-    do {
-      try scratchFile.close()
-    } catch {
-      if firstError == nil {
-        firstError = error
-      }
-    }
+    ensure.do { try scratchFile.close() }
 
     isClosed = true
 
     // rethrow the first error to keep method contract
-    if let error = firstError {
-      throw error
-    }
+    try ensure.done()
   }
 
   /// This will get an object from the pool.

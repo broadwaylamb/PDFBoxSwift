@@ -21,6 +21,7 @@ public enum IOError: Error, Hashable {
   case cannotWriteNewByteRange(byteRange: String, maxLength: UInt64)
   case cannotWriteSignature(expectedLength: Int, actualLength: Int)
   case missingSecurityHandler(filter: PDFEncryption.Filter?)
+  case documentClosed
 }
 
 extension IOError: CustomStringConvertible {
@@ -63,6 +64,8 @@ extension IOError: CustomStringConvertible {
     case .missingSecurityHandler(let filter):
       let filterDesc = filter.map { $0.rawValue.name } ?? "<nil>"
       return "No security handler for filter \(filterDesc)"
+    case .documentClosed:
+      return "Cannot save a document which has been closed"
     }
   }
 }

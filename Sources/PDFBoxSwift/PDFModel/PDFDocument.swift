@@ -60,6 +60,27 @@ public final class PDFDocument: Closeable {
     }
   }
 
+  /// This will save the document to an output stream.
+  ///
+  /// - Parameters:
+  ///   - output: The stream to write to. It will be closed when done. It is
+  ///             recommended that the stream is buffered.
+  ///   - clock: The clock to ask current time.
+  public func save<C: Clock>(output: OutputStream, clock: C) throws {
+    if cosDocument.isClosed {
+      throw IOError.documentClosed
+    }
+
+    // TODO: Subset fonts
+
+    let writer = COSWriter(outputStream: output)
+
+    var ensure = Ensure()
+    ensure.do { try writer.write(document: self, clock: clock) }
+    ensure.do { try writer.close() }
+    try ensure.done()
+  }
+
   public func close() throws {
     // TODO
   }

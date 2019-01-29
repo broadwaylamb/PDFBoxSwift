@@ -36,4 +36,15 @@ public final class BinaryFileOutputStream: BinaryFileStream, OutputStream {
   }
 }
 
+extension PDFDocument {
+
+  /// Save the document to a file.
+  ///
+  /// - Parameter path: The file to save as.
+  public func save(path: String) throws {
+    try save(output: BinaryFileOutputStream(path: path),
+             clock: POSIXClock.default)
+  }
+}
+
 #endif

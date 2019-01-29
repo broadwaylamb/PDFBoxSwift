@@ -804,8 +804,10 @@ open class COSWriter: COSVisitorProtocol {
 
   /// This will close the stream.
   func close() throws {
-    try standardOutput.close()
-    try incremental?.output.close()
+    var ensure = Ensure()
+    ensure.do { try standardOutput.close() }
+    ensure.do { try incremental?.output.close() }
+    try ensure.done()
   }
 
   /// This will write the PDF document.
