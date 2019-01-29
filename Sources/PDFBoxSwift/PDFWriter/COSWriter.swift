@@ -170,6 +170,27 @@ open class COSWriter: COSVisitorProtocol {
     try? close()
   }
 
+  private func prepareIncrement(for document: PDFDocument) {
+
+    let doc = document.cosDocument
+
+    for cosObjectKey in doc.xrefTable.keys {
+      if let object = doc.objectFromPool(forKey: cosObjectKey).object,
+         !(object is COSNumber) {
+        objectKeys[object] = cosObjectKey
+        keyObject[cosObjectKey] = object
+      }
+    }
+
+    let highestNumber = max(
+      doc.highestXRefObjectNumber,
+      doc.xrefTable.keys.max { $0.number < $1.number }?.number
+        ?? doc.highestXRefObjectNumber
+    )
+
+    self.number = highestNumber
+  }
+
   private func doWriteObject(_ object: COSBase) throws {
 
     writtenObjects.insert(object)
@@ -790,8 +811,8 @@ open class COSWriter: COSVisitorProtocol {
   /// This will write the PDF document.
   ///
   /// - Parameter document: The document to write.
-  open func write(document: COSDocument) throws {
-    try write(document: PDFDocument(document))
+  open func write<C: Clock>(document: COSDocument, clock: C) throws {
+    try write(document: PDFDocument(document), clock: clock)
   }
 
   /// This will write the PDF document. If signature should be created
@@ -802,9 +823,74 @@ open class COSWriter: COSVisitorProtocol {
   ///   - document: The document to write.
   ///   - signer: `Signer` to be used for signing; `nil` if external signing
   ///             would be performed or there will be no signing at all.
-  open func write(document: PDFDocument, signer: Signer? = nil) throws {
-    // TODO
-    fatalError()
+  open func write<C: Clock>(document: PDFDocument,
+                            signer: Signer? = nil,
+                            clock: C) throws {
+
+    let idTime = document.documentID ?? UInt64(clock.now() * 1000)
+
+    self.document = Either(document)
+    self.signer = signer
+
+    if incrementalUpdate {
+      prepareIncrement(for: document)
+    }
+
+    // if the document says we should remove encryption, then we shouldn't
+    // encrypt
+    if document.isAllSecurityToBeRemoved {
+      willEncrypt = false
+      // also need to get rid of the "Encrypt" in the trailer so readers
+      // don't try to decrypt a document which is not encrypted
+      document.cosDocument.trailer?[cos: .encrypt] = nil
+    } else if let encryption = document.encryption {
+      if !incrementalUpdate {
+        let securityHandler = try encryption.getSecurityHandler()
+        precondition(securityHandler.hasProtectionPolicy, """
+                     PDF contains an encryption dictionary, please remove it \
+                     with 'allSecurityToBeRemoved = true' or set a protection
+                     policy with protect(_:)
+                     """)
+        try securityHandler.prepareDocumentForEncryption(document)
+      }
+      willEncrypt = true
+    } else {
+      willEncrypt = false
+    }
+
+    let cosDoc = document.cosDocument
+    let trailer = cosDoc.trailer
+    let idArray = trailer?[cos: .id] ?? COSArray()
+    let missingID = idArray.count != 2
+
+    if missingID || incrementalUpdate {
+
+      let md5 = MD5()
+
+      // algorithm says to use time/path/size/values in doc to generate the id.
+      // we don't have path or size, so do the best we can
+      md5.update(withBytes: ArraySlice(String(idTime).utf8))
+
+      if let info = trailer?[cos: .info] {
+        for value in info.values {
+          md5.update(withBytes: ArraySlice(String(describing: value).utf8))
+        }
+      }
+
+      let digest = md5.finish()
+
+      // reuse origin documentID if available as first value
+      let firstID = missingID
+        ? COSString(bytes: digest)
+        : idArray[0] as? COSString
+
+      // it's ok to use the same ID for the second part if the ID is created
+      // for the first time
+      let secondID = missingID ? firstID : COSString(bytes: digest)
+      trailer?[cos: .id] = [firstID, secondID]
+    }
+
+    try cosDoc.accept(visitor: self)
   }
 
   /// This will write the FDF document.

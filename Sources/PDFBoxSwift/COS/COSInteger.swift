@@ -27,7 +27,7 @@ public final class COSInteger: COSNumber, ConvertibleToCOS {
     if (low...high).contains(Int(value)) {
       return staticInts[Int(value) - low]
     } else {
-      return COSInteger(value: Int64(value))
+      return COSInteger(value: Int64(clamping: value))
     }
   }
 

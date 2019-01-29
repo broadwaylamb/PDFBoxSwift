@@ -58,3 +58,37 @@ extension String: ConvertibleFromCOS {
     self = cosRepresentation.string()
   }
 }
+
+extension PDFEncryption.Version: ConvertibleFromCOS {
+  public init(cosRepresentation: COSInteger) {
+    self = PDFEncryption.Version(
+      rawValue: Int(clamping: cosRepresentation.intValue)
+    ) ?? .undocumentedUnsupported
+  }
+}
+
+extension PDFEncryption.Filter: ConvertibleFromCOS {
+  public init(cosRepresentation: COSName) {
+    self.init(rawValue: cosRepresentation)
+  }
+}
+
+extension PDFEncryption.SubFilter: ConvertibleFromCOS {
+  public init(cosRepresentation: COSName) {
+    self.init(rawValue: cosRepresentation)
+  }
+}
+
+extension PDFEncryption.Revision: ConvertibleFromCOS {
+  public init(cosRepresentation: COSNumber) {
+    self = PDFEncryption.Revision(
+      rawValue: Int(clamping: cosRepresentation.intValue)
+    ) ?? .r2
+  }
+}
+
+extension PDFPermissions: ConvertibleFromCOS {
+  public init(cosRepresentation: COSInteger) {
+    self.init(rawValue: Int32(truncatingIfNeeded: cosRepresentation.intValue))
+  }
+}

@@ -238,7 +238,7 @@ public final class COSDocument: COSBase, Closeable {
   /// - Parameter key: The object key.
   /// - Returns: The object in the pool or a new one if it has not been parsed
   ///            yet.
-  public func objectFromPool(forKey key: COSObjectKey?) -> COSObject? {
+  public func objectFromPool(forKey key: COSObjectKey?) -> COSObject {
     if let object = key.flatMap({ objectPool[$0] }) {
       return object
     }

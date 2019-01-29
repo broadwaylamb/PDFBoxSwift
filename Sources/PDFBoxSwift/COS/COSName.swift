@@ -291,6 +291,7 @@ extension COSName {
   public static let e = COSName(name: "E")
   public static let earlyChange = COSName(name: "EarlyChange")
   public static let ef = COSName(name: "EF")
+  public static let eff = COSName(name: "EFF")
   public static let embeddedFDFs = COSName(name: "EmbeddedFDFs")
   public static let embeddedFiles = COSName(name: "EmbeddedFiles")
   public static let empty = COSName(name: "")
@@ -865,6 +866,7 @@ extension COSName {
     e.name                           : e,
     earlyChange.name                 : earlyChange,
     ef.name                          : ef,
+    eff.name                         : eff,
     embeddedFDFs.name                : embeddedFDFs,
     embeddedFiles.name               : embeddedFiles,
     empty.name                       : empty,

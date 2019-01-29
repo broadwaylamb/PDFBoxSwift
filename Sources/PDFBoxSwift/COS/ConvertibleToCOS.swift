@@ -18,6 +18,15 @@ public protocol ConvertibleToCOS {
   var cosRepresentation: ToCOS { get }
 }
 
+extension ConvertibleToCOS where Self: RawRepresentable,
+                                 Self.RawValue: ConvertibleToCOS,
+                                 Self.RawValue.ToCOS == ToCOS {
+
+  public var cosRepresentation: ToCOS {
+    return rawValue.cosRepresentation
+  }
+}
+
 extension Bool: ConvertibleToCOS {
   public var cosRepresentation: COSBoolean {
     return COSBoolean.get(self)
@@ -58,4 +67,26 @@ extension String: ConvertibleToCOS {
   public var cosRepresentation: COSString {
     return COSString(text: self)
   }
+}
+
+extension PDFEncryption.Version: ConvertibleToCOS {
+  public typealias ToCOS = COSInteger
+}
+
+extension PDFEncryption.Filter: ConvertibleToCOS {
+  public typealias ToCOS = COSName
+}
+
+extension PDFEncryption.SubFilter: ConvertibleToCOS {
+  public typealias ToCOS = COSName
+}
+
+extension PDFEncryption.Revision: ConvertibleToCOS {
+  public var cosRepresentation: COSNumber {
+    return COSInteger.get(rawValue)
+  }
+}
+
+extension PDFPermissions: ConvertibleToCOS {
+  public typealias ToCOS = COSInteger
 }

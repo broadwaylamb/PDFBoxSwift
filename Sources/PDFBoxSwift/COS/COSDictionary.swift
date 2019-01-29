@@ -488,8 +488,7 @@ extension COSDictionary {
       return T(rawValue: intValue)
     }
     set {
-      self[native: TypedCOSName<Int32>(key: key.key), default: 0] =
-          newValue.rawValue
+      self[native: TypedCOSName<Int32>(key: key.key)] = newValue.rawValue
     }
   }
 

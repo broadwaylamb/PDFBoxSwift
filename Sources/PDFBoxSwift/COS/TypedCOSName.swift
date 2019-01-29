@@ -222,6 +222,180 @@ extension TypedCOSName where T == Int64 {
   public static let xRefStm = TypedCOSName(key: .xRefStm)
 }
 
+// MARK: - PDF spec: Table 20 – Entries common to all encryption dictionaries
+extension TypedCOSName where T == PDFEncryption.Filter {
+
+  /// *(Required)* The name of the preferred security handler for this document.
+  /// It shall be the name of the security handler that was used to encrypt
+  /// the document. If **SubFilter** is not present, only this security handler
+  /// shall be used when opening the document. If it is present, a conforming
+  /// reader can use any security handler that implements the format specified
+  /// by SubFilter.
+  ///
+  /// **Standard** shall be the name of the built-in password-based security
+  /// handler. Names for other security handlers may be registered by using
+  /// the procedure described in Annex E of the PDF spec.
+  public static let encryptionFilter = TypedCOSName(key: .filter)
+}
+
+extension TypedCOSName where T == PDFEncryption.SubFilter {
+  /// *(Optional; PDF 1.3)* A name that completely specifies the format and
+  /// interpretation of the contents of the encryption dictionary. It allows
+  /// security handlers other than the one specified by **Filter** to decrypt
+  /// the document. If this entry is absent, other security handlers shall not
+  /// decrypt the document.
+  ///
+  /// - Note: This entry was introduced in PDF 1.3 to support the use of
+  ///   public-key cryptography in PDF files (see PDF spec 7.6.4,
+  ///   "Public-Key Security Handlers"); however, it was not incorporated into
+  ///   the PDF Reference until the fourth edition (PDF 1.5).
+  public static let encryptionSubFilter = TypedCOSName(key: .subFilter)
+}
+
+extension TypedCOSName where T == COSName {
+  /// *(Optional; meaningful only when the value of V is 4; PDF 1.5)*
+  /// The name of the crypt filter that shall be used by default when decrypting
+  /// streams. The name shall be a key in the **CF** dictionary or a standard
+  /// crypt filter name specified in PDF spec Table 26. All streams in
+  /// the document, except for cross-reference streams
+  /// (see PDF spec 7.5.8, "Cross-Reference Streams") or streams that have
+  /// a **Crypt** entry in their **Filter** array (see PDF spec Table 6), shall
+  /// be decrypted by the security handler, using this crypt filter.
+  ///
+  /// Default value: **Identity**.
+  public static let encryptionStreamFilter = TypedCOSName(key: .stmF)
+
+  /// *(Optional; meaningful only when the value of V is 4; PDF 1.5)*
+  /// The name of the crypt filter that shall be used when decrypting all
+  /// strings in the document. The name shall be a key in the **CF** dictionary
+  /// or a standard crypt filter name specified in PDF spec Table 26.
+  ///
+  /// Default value: **Identity**.
+  public static let encryptionStringFilter = TypedCOSName(key: .strF)
+
+  /// *(Optional; meaningful only when the value of V is 4; PDF 1.6)*
+  /// The name of the crypt filter that shall be used when encrypting embedded
+  /// file streams that do not have their own crypt filter specifier; it shall
+  /// correspond to a key in the **CF** dictionary or a standard crypt filter
+  /// name specified in PDF spec Table 26.
+  ///
+  /// This entry shall be provided by the security handler. Conforming writers
+  /// shall respect this value when encrypting embedded files, except for
+  /// embedded file streams that have their own crypt filter specifier. If this
+  /// entry is not present, and the embedded file stream does not contain
+  /// a crypt filter specifier, the stream shall be encrypted using the default
+  /// stream crypt filter specified by **StmF**.
+  public static let encryptionEmbeddedFileFilter = TypedCOSName(key: .eff)
+}
+
+extension TypedCOSName where T == PDFEncryption.Version {
+
+  /// *(Optional)* A code specifying the algorithm to be used in encrypting and
+  /// decrypting the document:
+  ///
+  /// - `undocumentedUnsupported`: An algorithm that is undocumented. This value
+  ///   shall not be used.
+  ///
+  /// - `algorithm40Bit`: "Algorithm 1: Encryption of data using the RC4 or AES
+  ///   algorithms" in 7.6.2, "General Encryption Algorithm," with an encryption
+  ///   key length of 40 bits.
+  ///
+  /// - `algorithmVariableLength`: *(PDF 1.4)* "Algorithm 1: Encryption of data
+  ///   using the RC4 or AES algorithms" in 7.6.2, "General Encryption
+  ///   Algorithm," but permitting encryption key lengths greater than 40 bits.
+  ///
+  /// - `unpublishedAlgorithm`: *(PDF 1.4)* An unpublished algorithm that
+  ///   permits encryption key lengths ranging from 40 to 128 bits. This value
+  ///   shall not appear in a conforming PDF file.
+  ///
+  /// - `securityHandler`: *(PDF 1.5)* The security handler defines the use of
+  ///   encryption and decryption in the document, using the rules specified by
+  ///   the **CF**, **StmF**, and **StrF** entries.
+  ///
+  /// The default value if this entry is omitted shall be
+  /// `undocumentedUnsupported`, but when present should be a value of
+  /// `algorithm40Bit` or greater.
+  public static let encryptionVersion = TypedCOSName(key: .v)
+}
+
+extension TypedCOSName where T == Int {
+
+  /// *(Optional; PDF 1.4; only if V is 2 or 3)* The length of the encryption
+  /// key, in bits. The value shall be a multiple of 8, in the range 40 to 128.
+  /// Default value: 40.
+  public static let encryptionKeyLength = TypedCOSName(key: .length)
+}
+
+extension TypedCOSName where T == COSDictionary {
+
+  /// *(Optional; meaningful only when the value of V is 4; PDF 1.5)*
+  /// A dictionary whose keys shall be crypt filter names and whose values shall
+  /// be the corresponding crypt filter dictionaries (see PDF spec Table 25).
+  /// Every crypt filter used in the document shall have an entry in this
+  /// dictionary, except for the standard crypt filter names
+  /// (see PDF spec Table 26).
+  ///
+  /// The conforming reader shall ignore entries in **CF** dictionary with
+  /// the keys equal to those listed in PDF spec Table 26 and use properties of
+  /// the respective standard crypt filters.
+  public static let cryptFilters = TypedCOSName(key: .cf)
+}
+
+// MARK: - PDF spec: Table 21 – Additional encryption dictionary entries for the standard security handler
+extension TypedCOSName where T == PDFEncryption.Revision {
+
+  /// *(Required)* A number specifying which revision of the standard security
+  /// handler shall be used to interpret this dictionary:
+  ///
+  /// - `r2`: If the document is encrypted with a **V** value less than 2
+  ///   (see PDF spec Table 20) and does not have any of the access permissions
+  ///   set to 0 (by means of the **P** entry) that are designated “Security
+  ///   handlers of revision 3 or greater” in Table 22.
+  /// - `r3`: If the document is encrypted with a **V** value of 2 or 3, or has
+  ///   any “Security handlers of revision 3 or greater” access permissions set
+  ///   to 0.
+  /// - `r4`: If the document is encrypted with a **V** value of 4.
+  public static let securityHandlerRevision = TypedCOSName(key: .r)
+}
+
+extension TypedCOSName where T == COSString {
+
+  /// *(Required)* A 32-byte string, based on both the owner and user passwords,
+  /// that shall be used in computing the encryption key and in determining
+  /// whether a valid owner password was entered. For more information, see
+  /// PDF spec 7.6.3.3, "Encryption Key Algorithm,"
+  /// and 7.6.3.4, "Password Algorithms."
+  public static let ownerKey = TypedCOSName(key: .o)
+
+  /// *(Required)* A 32-byte string, based on the user password, that shall be
+  /// used in determining whether to prompt the user for a password and, if so,
+  /// whether a valid user or owner password was entered. For more information,
+  /// see 7.6.3.4, "Password Algorithms."
+  public static let userKey = TypedCOSName(key: .u)
+
+  public static let ownerEncryptionKey = TypedCOSName(key: .oe)
+
+  public static let userEncryptionKey = TypedCOSName(key: .ue)
+}
+
+extension TypedCOSName where T == PDFPermissions {
+
+  /// *(Required)* A set of flags specifying which operations shall be permitted
+  /// when the document is opened with user access (see PDF spec Table 22).
+  public static let permissions = TypedCOSName(key: .p)
+}
+
+extension TypedCOSName where T == Bool {
+
+  /// *(Optional; meaningful only when the value of V is 4; PDF 1.5)*
+  /// Indicates whether the document-level metadata stream
+  /// (see PDF spec 14.3.2, "Metadata Streams") shall be encrypted. Conforming
+  /// products should respect this value.
+  ///
+  /// Default value: `true`.
+  public static let encryptMetaData = TypedCOSName(key: .encryptMetaData)
+}
+
 // MARK: - PDF spec: Table 252 – Entries in a signature dictionary
 extension TypedCOSName where T == COSName {
 
