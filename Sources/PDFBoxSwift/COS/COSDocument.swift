@@ -55,6 +55,10 @@ public final class COSDocument: COSBase, Closeable {
     self.init(scratchFile: .createMainMemoryOnly())
   }
 
+  public override func encode(to encoder: Encoder) throws {
+    fatalError("Encoding is not supported for COSDocument")
+  }
+
   deinit {
     try? close()
   }
@@ -86,7 +90,7 @@ public final class COSDocument: COSBase, Closeable {
     // TODO: This has complexity O(n*m) since the subscript is O(n).
     // This can work in O(n+m).
     for (key, value) in dictionary {
-      stream[key] = value
+      stream.dictionary[key] = value
     }
     return stream
   }

@@ -8,7 +8,7 @@
 /// An array of `COSBase` objects as part of the PDF document.
 public final class COSArray: COSBase, COSUpdateInfo, ConvertibleToCOS {
 
-  private var objects: [COSBase] = []
+  private var objects: ContiguousArray<COSBase> = []
 
   /// The update state for the `COSWriter`. This indicates whether an object
   /// is to be written when there is an incremental save.
@@ -17,6 +17,13 @@ public final class COSArray: COSBase, COSUpdateInfo, ConvertibleToCOS {
   /// Constructor.
   public override init() {
     super.init()
+  }
+
+  public override func encode(to encoder: Encoder) throws {
+    var container = encoder.unkeyedContainer()
+    for object in objects {
+      try container.encode(object)
+    }
   }
 
   @discardableResult
@@ -102,7 +109,10 @@ extension COSArray: RandomAccessCollection, MutableCollection {
 extension COSArray: ExpressibleByArrayLiteral {
   public convenience init(arrayLiteral elements: COSBase?...) {
     self.init()
-    objects = elements.map { $0 ?? COSNull.null }
+    objects.reserveCapacity(elements.count)
+    for element in elements {
+      objects.append(element ?? COSNull.null)
+    }
   }
 }
 
@@ -118,12 +128,13 @@ extension COSArray: RangeReplaceableCollection {
   public convenience init<S: Sequence>(_ elements: S)
       where S.Element == COSBase {
     self.init()
-    objects = Array(elements)
+    objects = ContiguousArray(elements)
   }
 
   public convenience init(repeating repeatedValue: COSBase?, count: Int) {
     self.init()
-    objects = Array(repeating: repeatedValue ?? COSNull.null, count: count)
+    objects = ContiguousArray(repeating: repeatedValue ?? COSNull.null,
+                              count: count)
   }
 
   public func append(_ newElement: COSBase?) {

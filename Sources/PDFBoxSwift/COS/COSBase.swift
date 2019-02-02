@@ -8,6 +8,7 @@
 /// The base object that all objects in the PDF document will extend.
 public class COSBase: COSObjectable,
                       Hashable,
+                      Encodable,
                       CustomDebugStringConvertible,
                       CustomStringConvertible {
 
@@ -18,6 +19,10 @@ public class COSBase: COSObjectable,
 
   /// Constructor.
   internal init() {}
+
+  public func encode(to encoder: Encoder) throws {
+    COSBase.requiresConcreteImplementation()
+  }
 
   /// /// Convert this object to a COS object.
   public var cosObject: COSBase {

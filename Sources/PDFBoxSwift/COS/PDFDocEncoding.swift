@@ -136,7 +136,7 @@ extension PDFDocEncoding: Unicode.Encoding {
     mutating func parseScalar<I>(
       from input: inout I
     ) -> Unicode.ParseResult<EncodedScalar>
-        where I : IteratorProtocol, I.Element == UInt8 {
+        where I: IteratorProtocol, I.Element == UInt8 {
           return input
             .next()
             .map(EncodedScalar.init)

@@ -16,7 +16,7 @@ internal struct SmallDictionary<Key : Equatable, Value> {
     var value: Value
   }
 
-  private var dictArr: [KeyValuePair] = []
+  private var dictArr: ContiguousArray<KeyValuePair> = []
 
   /// Creates an empty dictionary.
   init(minimumCapacity: Int = 0) {
@@ -26,13 +26,19 @@ internal struct SmallDictionary<Key : Equatable, Value> {
 
 extension SmallDictionary: ExpressibleByDictionaryLiteral {
   init(dictionaryLiteral elements: (Key, Value)...) {
-    dictArr = elements.map(KeyValuePair.init)
+    dictArr.reserveCapacity(elements.count)
+    for (key, value) in elements {
+      dictArr.append(KeyValuePair(key: key, value: value))
+    }
   }
 }
 
 extension SmallDictionary where Key: Hashable {
   init(_ dictionary: [Key : Value]) {
-    dictArr = dictionary.map(KeyValuePair.init)
+    dictArr.reserveCapacity(dictionary.count)
+    for (key, value) in dictionary {
+      dictArr.append(KeyValuePair(key: key, value: value))
+    }
   }
 }
 
@@ -199,16 +205,16 @@ extension SmallDictionary {
     dictArr.removeAll(keepingCapacity: keepCapacity)
   }
 
-  typealias Keys = LazyMapCollection<[KeyValuePair], Key>
+  typealias Keys = AnyBidirectionalCollection<Key>
 
   var keys: Keys {
-    return dictArr.lazy.map { $0.key }
+    return Keys(dictArr.lazy.map { $0.key })
   }
 
-  typealias Values = LazyMapCollection<[KeyValuePair], Value>
+  typealias Values = AnyBidirectionalCollection<Value>
 
   var values: Values {
-    return dictArr.lazy.map { $0.value }
+    return Values(dictArr.lazy.map { $0.value })
   }
 }
 

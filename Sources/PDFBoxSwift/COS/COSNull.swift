@@ -6,7 +6,7 @@
 //
 
 /// This class represents a null PDF object.
-public final class COSNull: COSBase {
+public final class COSNull: COSBase, Decodable {
 
   private static let nullBytes: [UInt8] = Array("null".utf8)
 
@@ -16,6 +16,24 @@ public final class COSNull: COSBase {
   /// Constructor.
   private override init() {
     super.init()
+  }
+
+  public required convenience init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    if container.decodeNil() {
+      self.init(_get: ())
+    } else {
+      let context = DecodingError.Context(
+        codingPath: container.codingPath,
+        debugDescription: "Could not decode \(type(of: self))"
+      )
+      throw DecodingError.typeMismatch(COSNull.self, context)
+    }
+  }
+
+  public override func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encodeNil()
   }
 
   @discardableResult
@@ -35,3 +53,16 @@ public final class COSNull: COSBase {
     return "COSNull{}"
   }
 }
+
+/// https://forums.swift.org/t/allow-self-x-in-class-convenience-initializers
+private protocol COSNullSelfAssignInInit {
+  static var null: Self { get }
+}
+
+extension COSNullSelfAssignInInit {
+  fileprivate init(_get: ()) {
+    self = .null
+  }
+}
+
+extension COSNull: COSNullSelfAssignInInit {}

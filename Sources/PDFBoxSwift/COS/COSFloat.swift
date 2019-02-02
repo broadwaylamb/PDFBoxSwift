@@ -6,14 +6,14 @@
 //
 
 /// This class represents a floating point number in a PDF document.
-public final class COSFloat: COSNumber, ConvertibleToCOS {
+public final class COSFloat: COSNumber, ConvertibleToCOS, Decodable {
 
   private let stringValue: String
 
   /// Constructor.
   ///
   /// - Parameter value: The value that this object wraps.
-  public init(value: Float) {
+  public init<T: FloatingPoint & LosslessStringConvertible>(value: T) {
     self.stringValue = String(value)
   }
 
@@ -51,6 +51,16 @@ public final class COSFloat: COSNumber, ConvertibleToCOS {
     }
   }
 
+  public convenience init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    try self.init(value: container.decode(Double.self))
+  }
+
+  public override func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encode(doubleValue)
+  }
+
   public override var floatValue: Float {
     return Float(stringValue) ?? 0
   }
@@ -60,7 +70,7 @@ public final class COSFloat: COSNumber, ConvertibleToCOS {
   }
 
   public override var intValue: Int64 {
-    return Int64(doubleValue)
+    return Int64(max(min(doubleValue, Double(Int64.max)), Double(Int64.min)))
   }
 
   public override func isEqual(_ other: COSBase) -> Bool {

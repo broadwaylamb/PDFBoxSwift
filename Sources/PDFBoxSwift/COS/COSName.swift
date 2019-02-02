@@ -6,11 +6,12 @@
 //
 
 /// This class represents a PDF Name object.
-public final class COSName: COSBase, ConvertibleToCOS {
+public final class COSName: COSBase, ConvertibleToCOS, Decodable {
 
   public let name: String
 
   public override func isEqual(_ other: COSBase) -> Bool {
+    guard self !== other else { return true }
     guard let other = other as? COSName else { return false }
     return self.name == other.name
   }
@@ -32,6 +33,16 @@ public final class COSName: COSBase, ConvertibleToCOS {
     if !`static` {
       COSName.nameMap.atomically { $0[self.name] = self }
     }
+  }
+
+  public required convenience init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    try self.init(_getPDFName: container.decode(String.self))
+  }
+
+  public override func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encode(name)
   }
 
   /// Whether the name is the empty string.
@@ -87,25 +98,6 @@ public final class COSName: COSBase, ConvertibleToCOS {
 extension COSName: Comparable {
   public static func < (lhs: COSName, rhs: COSName) -> Bool {
     return lhs.name < rhs.name
-  }
-}
-
-extension CodingKey where Self: RawRepresentable, Self.RawValue == COSName {
-
-  public var stringValue: String {
-    return rawValue.name
-  }
-
-  public init?(stringValue: String) {
-    self.init(rawValue: COSName.getPDFName(stringValue))
-  }
-
-  public var intValue: Int? {
-    return nil
-  }
-
-  public init?(intValue: Int) {
-    return nil
   }
 }
 
@@ -625,6 +617,7 @@ extension COSName {
   public static let subject = COSName(name: "Subject")
   public static let subjectDN = COSName(name: "SubjectDN")
   public static let subtype = COSName(name: "Subtype")
+  public static let `super` = COSName(name: "Super")
   public static let supplement = COSName(name: "Supplement")
   public static let sv = COSName(name: "SV")
   public static let svCert = COSName(name: "SVCert")
@@ -1180,6 +1173,7 @@ extension COSName {
     subject.name                     : subject,
     subjectDN.name                   : subjectDN,
     subtype.name                     : subtype,
+    `super`.name                     : `super`,
     supplement.name                  : supplement,
     sv.name                          : sv,
     svCert.name                      : svCert,
@@ -1257,3 +1251,16 @@ extension COSName {
     zaDb.name                        : zaDb,
   ]
 }
+
+/// https://forums.swift.org/t/allow-self-x-in-class-convenience-initializers
+private protocol COSNameSelfAssignInInit {
+  static func getPDFName(_ nameString: String) -> Self
+}
+
+extension COSNameSelfAssignInInit {
+  fileprivate init(_getPDFName nameString: String) {
+    self = Self.getPDFName(nameString)
+  }
+}
+
+extension COSName: COSNameSelfAssignInInit {}

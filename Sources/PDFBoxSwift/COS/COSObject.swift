@@ -49,6 +49,11 @@ public final class COSObject: COSBase, COSUpdateInfo {
     self.generationNumber = generationNumber
   }
 
+  public override func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encode(object)
+  }
+
   @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     if let object = object {

@@ -6,28 +6,27 @@
 //
 
 /// This class represents an integer number in a PDF document.
-public final class COSInteger: COSNumber, ConvertibleToCOS {
+public final class COSInteger: COSNumber, ConvertibleToCOS, Decodable {
 
   /// The lowest integer to be kept in the `staticInts` array.
-  private static let low = -100
+  private static let low: Int64 = -100
 
   /// The highest integer to be kept in the `staticInts` array.
-  private static let high = 256
+  private static let high: Int64 = 256
 
   /// Static instances of all `COSInteger`s in the range from `low` to `high`.
-  private static let staticInts = (low...high).map {
-    COSInteger(value: Int64($0))
-  }
+  private static let staticInts = (low...high).map(COSInteger.init)
 
   /// Returns a `COSInteger` instance with the given value.
   ///
   /// - Parameter value: Integer value.
   /// - Returns: A `COSInteger` instance.
   public static func get<T: BinaryInteger>(_ value: T) -> COSInteger {
-    if (low...high).contains(Int(value)) {
-      return staticInts[Int(value) - low]
+    let value = Int64(clamping: value)
+    if (low...high).contains(value) {
+      return staticInts[Int(value - low)]
     } else {
-      return COSInteger(value: Int64(clamping: value))
+      return COSInteger(value: value)
     }
   }
 
@@ -47,6 +46,16 @@ public final class COSInteger: COSNumber, ConvertibleToCOS {
 
   private init(value: Int64) {
     self.value = value
+  }
+
+  public convenience init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    try self.init(_get: container.decode(Int64.self))
+  }
+
+  public override func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encode(value)
   }
 
   public override func isEqual(_ other: COSBase) -> Bool {
@@ -88,6 +97,19 @@ public final class COSInteger: COSNumber, ConvertibleToCOS {
   }
 
   public override var debugDescription: String {
-    return "COSInt{\(value)}"
+    return "COSInteger{\(value)}"
   }
 }
+
+/// https://forums.swift.org/t/allow-self-x-in-class-convenience-initializers
+private protocol COSIntegerSelfAssignInInit {
+  static func get<T: BinaryInteger>(_ value: T) -> Self
+}
+
+extension COSIntegerSelfAssignInInit {
+  fileprivate init<T: BinaryInteger>(_get value: T) {
+    self = Self.get(value)
+  }
+}
+
+extension COSInteger: COSIntegerSelfAssignInInit {}

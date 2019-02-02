@@ -727,7 +727,7 @@ open class COSWriter: COSVisitorProtocol {
       fatalError("Encryption is not implemented yet")
     }
 
-    try visit(stream as COSDictionary)
+    try visit(stream.dictionary)
     try standardOutput.write(bytes: COSWriter.stream)
     try standardOutput.writeCRLF()
 

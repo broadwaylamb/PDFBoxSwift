@@ -25,6 +25,20 @@ public class COSDictionary: COSBase, COSUpdateInfo, ConvertibleToCOS {
     items = dict.items
   }
 
+  private struct CodingKeys: COSCodingKey {
+    let nameValue: COSName
+    init(nameValue: COSName) {
+      self.nameValue = nameValue
+    }
+  }
+
+  public override func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    for (key, value) in self {
+      try container.encode(value, forKey: CodingKeys(nameValue: key))
+    }
+  }
+
   /// Returns a Boolean value indicating whether the dictionary contains
   /// the given value. This will dereference a `COSObject`.
   ///

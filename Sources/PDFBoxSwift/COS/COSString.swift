@@ -21,7 +21,7 @@
 /// Byte strings are used for binary data represented as a series of bytes, but
 /// the encoding is not known. The bytes of the string need not represent
 /// characters.
-public final class COSString: COSBase, ConvertibleToCOS {
+public final class COSString: COSBase, ConvertibleToCOS, Decodable {
 
   public struct ParseError: Error, CustomStringConvertible {
     public let description: String
@@ -90,13 +90,22 @@ public final class COSString: COSBase, ConvertibleToCOS {
     } else {
       // UTF-16BE encoded string with a leading byte order marker
       let utf16 = text.utf16BigEndian
-      bytes.reserveCapacity(2 + utf16.count)
+      bytes.reserveCapacity(2 + utf16.count * 2)
       bytes.append(contentsOf: [0xFE, 0xFF]) // BOM
-      bytes.append(contentsOf: utf16.lazy.flatMap { codeUnit -> [UInt8] in
-        let be = codeUnit.bigEndian
-        return [UInt8((be & 0xFF00) >> 8), UInt8(be & 0xFF)]
+      bytes.append(contentsOf: utf16.flatMap {
+        [UInt8(($0 & 0xFF00) >> 8), UInt8($0 & 0xFF)]
       })
     }
+  }
+
+  public convenience init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    try self.init(text: container.decode(String.self))
+  }
+
+  public override func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encode(string())
   }
 
   /// Returns the content of this string as a PDF *text string*.
@@ -126,8 +135,9 @@ public final class COSString: COSBase, ConvertibleToCOS {
   }
 
   public override func isEqual(_ other: COSBase) -> Bool {
+    guard self !== other else { return true }
     guard let other = other as? COSString else { return false }
-    return string() == other.string() && forceHexForm == other.forceHexForm
+    return forceHexForm == other.forceHexForm && string() == other.string()
   }
 
   public override func hash(into hasher: inout Hasher) {

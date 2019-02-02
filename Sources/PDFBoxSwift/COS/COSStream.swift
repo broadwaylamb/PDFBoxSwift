@@ -5,7 +5,9 @@
 //  Created by Sergej Jaskiewicz on 17/01/2019.
 //
 
-public final class COSStream: COSDictionary, Closeable {
+public final class COSStream: COSBase, Closeable {
+
+  public let dictionary = COSDictionary()
 
   /// Backing store, in-memory or on-disk.
   fileprivate var randomAccess: RandomAccess?
@@ -32,11 +34,22 @@ public final class COSStream: COSDictionary, Closeable {
   public init(scratchFile: ScratchFile) {
     self.scratchFile = scratchFile
     super.init()
-    self[native: .length] = 0
+    dictionary[native: .length] = 0
   }
 
   deinit {
     try? close()
+  }
+
+  public override func encode(to encoder: Encoder) throws {
+    var container = encoder.unkeyedContainer()
+    try container.encode(dictionary)
+    var streamContainer = container.nestedUnkeyedContainer()
+    let input = try createRawInputStream()
+    while let byte = try input.read() {
+      try streamContainer.encode(byte)
+    }
+    try input.close()
   }
 
   private func checkClosed() throws {
@@ -91,7 +104,7 @@ public final class COSStream: COSDictionary, Closeable {
   ) throws -> COSInputStream {
     let input = try createRawInputStream()
     return try COSInputStream(filters: getFilters(),
-                              parameters: self,
+                              parameters: dictionary,
                               input: input,
                               scratchFile: scratchFile,
                               options: options)
@@ -132,14 +145,14 @@ public final class COSStream: COSDictionary, Closeable {
     }
 
     if let filters = filters {
-      self[cos: .filter] = filters
+      dictionary[cos: .filter] = filters
     }
     try? randomAccess?.close() // Ignore any errors
     let ra = try scratchFile.createBuffer()
     randomAccess = ra
     let randomOut = RandomAccessOutputStream(writer: ra)
     let cosOut = try COSOutputStream(filters: getFilters(),
-                                     parameters: self,
+                                     parameters: dictionary,
                                      output: randomOut,
                                      scratchFile: scratchFile)
     isWriting = true
@@ -182,7 +195,7 @@ public final class COSStream: COSDictionary, Closeable {
                  length of this COSStream.
                  """)
 
-    return self[native: .length, default: 0]
+    return dictionary[native: .length, default: 0]
   }
 
   /// The filters to apply to the byte stream.
@@ -192,7 +205,7 @@ public final class COSStream: COSDictionary, Closeable {
   /// - A `COSArray` containing `COSNames` if multiple filters are to be
   ///   .applied
   public var filters: Either<COSName, COSArray>? {
-    return self[cos: .filter]
+    return dictionary[cos: .filter]
   }
 
   func textString() -> String {
@@ -228,9 +241,13 @@ private class COSStreamFilterOutputStream: FilterOutputStream {
     super.init(out: out)
   }
 
+  deinit {
+    try? close()
+  }
+
   override func close() throws {
     try super.close()
-    cosStream[native: .length] = try cosStream.randomAccess?.count()
+    cosStream.dictionary[native: .length] = try cosStream.randomAccess?.count()
     cosStream.isWriting = false
   }
 }

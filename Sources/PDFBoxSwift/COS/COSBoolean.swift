@@ -6,7 +6,7 @@
 //
 
 /// This class represents a boolean value in the PDF document.
-public final class COSBoolean: COSBase, ConvertibleToCOS {
+public final class COSBoolean: COSBase, ConvertibleToCOS, Decodable {
 
   /// The "true" boolean token.
   private static let trueBytes: [UInt8] = Array("true".utf8)
@@ -25,6 +25,17 @@ public final class COSBoolean: COSBase, ConvertibleToCOS {
 
   private init(value: Bool) {
     self.value = value
+    super.init()
+  }
+
+  public required convenience init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    try self.init(_get: container.decode(Bool.self))
+  }
+
+  public override func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encode(value)
   }
 
   /// This will get the boolean value.
@@ -60,3 +71,16 @@ public final class COSBoolean: COSBase, ConvertibleToCOS {
     return value.description
   }
 }
+
+/// https://forums.swift.org/t/allow-self-x-in-class-convenience-initializers
+private protocol COSBooleanSelfAssignInInit {
+  static func get(_ value: Bool) -> Self
+}
+
+extension COSBooleanSelfAssignInInit {
+  fileprivate init(_get value: Bool) {
+    self = Self.get(value)
+  }
+}
+
+extension COSBoolean: COSBooleanSelfAssignInInit {}
