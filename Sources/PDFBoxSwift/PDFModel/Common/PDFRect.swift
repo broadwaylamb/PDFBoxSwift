@@ -8,6 +8,54 @@
 /// A rectangle in a PDF document.
 public struct PDFRect: Hashable {
 
+  /// 8.5 x 11 inches
+  public static let letter = PDFRect(origin: .zero, size: .letter)
+
+  /// 8.5 x 14 inches
+  public static let legal = PDFRect(origin: .zero, size: .legal)
+
+  /// 841 x 1189 mm
+  public static let a0 = PDFRect(origin: .zero, size: .a0)
+
+  /// 594 x 841 mm
+  public static let a1 = PDFRect(origin: .zero, size: .a1)
+
+  /// 420 x 594 mm
+  public static let a2 = PDFRect(origin: .zero, size: .a2)
+
+  /// 297 x 420 mm
+  public static let a3 = PDFRect(origin: .zero, size: .a3)
+
+  /// 210 x 297 mm
+  public static let a4 = PDFRect(origin: .zero, size: .a4)
+
+  /// 148 x 210 mm
+  public static let a5 = PDFRect(origin: .zero, size: .a5)
+
+  /// 105 x 148 mm
+  public static let a6 = PDFRect(origin: .zero, size: .a6)
+
+  /// 250 x 353 mm
+  public static let b4 = PDFRect(origin: .zero, size: .b4)
+
+  /// 176 x 250 mm
+  public static let b5 = PDFRect(origin: .zero, size: .b5)
+
+  /// 7.25 x 10.5 inches
+  public static let executive = PDFRect(origin: .zero, size: .executive)
+
+  /// 4 x 6 inches
+  public static let us4x6 = PDFRect(origin: .zero, size: .us4x6)
+
+  /// 4 x 8 inches
+  public static let us4x8 = PDFRect(origin: .zero, size: .us4x8)
+
+  /// 5 x 7 inches
+  public static let us5x7 = PDFRect(origin: .zero, size: .us5x7)
+
+  /// 4.125 x 9.5 inches
+  public static let envelope10 = PDFRect(origin: .zero, size: .envelope10)
+
   /// The rectangle whose origin and size are both zero.
   public static let zero = PDFRect(origin: .zero, size: .zero)
 
