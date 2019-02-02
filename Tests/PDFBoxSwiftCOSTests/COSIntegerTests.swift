@@ -69,7 +69,7 @@ final class COSIntegerTests: XCTestCase {
   }
 
   func testIntValue() {
-    for i in stride(from: -1000, to: 3000, by: 200) {
+    for i in stride(from: -1000 as Int64, to: 3000, by: 200) {
       XCTAssertEqual(i, COSInteger.get(i).intValue)
     }
   }

@@ -90,6 +90,25 @@ extension COSName: Comparable {
   }
 }
 
+extension CodingKey where Self: RawRepresentable, Self.RawValue == COSName {
+
+  public var stringValue: String {
+    return rawValue.name
+  }
+
+  public init?(stringValue: String) {
+    self.init(rawValue: COSName.getPDFName(stringValue))
+  }
+
+  public var intValue: Int? {
+    return nil
+  }
+
+  public init?(intValue: Int) {
+    return nil
+  }
+}
+
 extension COSName {
 
   public static func getPDFName(_ nameString: String) -> COSName {

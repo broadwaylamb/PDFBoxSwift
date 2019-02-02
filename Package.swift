@@ -14,5 +14,7 @@ let package = Package(
     .testTarget(name: "PDFBoxSwiftCOSTests", dependencies: ["PDFBoxSwift"]),
     .testTarget(name: "PDFBoxSwiftIOTests", dependencies: ["PDFBoxSwift"]),
     .testTarget(name: "PDFBoxSwiftUtilTests", dependencies: ["PDFBoxSwift"]),
+    .testTarget(name: "PDFBoxSwiftPDFModelTests",
+                dependencies: ["PDFBoxSwift"]),
   ]
 )

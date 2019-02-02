@@ -114,7 +114,7 @@ final class COSFloatTests: XCTestCase {
   final class IntValueTester: BaseTester {
     override func runTest(_ num: Float) throws {
       let testFloat = COSFloat(value: num)
-      XCTAssertEqual(Int(num), testFloat.intValue)
+      XCTAssertEqual(Int64(num), testFloat.intValue)
     }
   }
 
