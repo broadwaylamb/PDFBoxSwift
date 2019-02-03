@@ -34,7 +34,7 @@ public final class COSStream: COSBase, Closeable {
   public init(scratchFile: ScratchFile) {
     self.scratchFile = scratchFile
     super.init()
-    dictionary[native: .length] = 0
+    dictionary[decode: .length] = 0
   }
 
   deinit {
@@ -247,7 +247,7 @@ private class COSStreamFilterOutputStream: FilterOutputStream {
 
   override func close() throws {
     try super.close()
-    cosStream.dictionary[native: .length] = try cosStream.randomAccess?.count()
+    cosStream.dictionary[decode: .length] = try cosStream.randomAccess?.count()
     cosStream.isWriting = false
   }
 }

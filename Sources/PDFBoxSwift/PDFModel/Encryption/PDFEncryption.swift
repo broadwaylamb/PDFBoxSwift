@@ -30,7 +30,7 @@ public final class PDFEncryption {
   /// - `securityHandler`: *(PDF 1.5)* The security handler defines the use of
   ///   encryption and decryption in the document, using the rules specified by
   ///   the **CF**, **StmF**, and **StrF** entries.
-  public enum Version: Int, CaseIterable {
+  public enum Version: Int, Codable, CaseIterable {
 
     /// An algorithm that is undocumented. This value shall not be used.
     case undocumentedUnsupported = 0
@@ -56,14 +56,14 @@ public final class PDFEncryption {
     case securityHandler = 4
   }
 
-  public struct Filter: RawRepresentable, Hashable {
+  public struct Filter: Codable, RawRepresentable, Hashable {
     public var rawValue: COSName
     public init(rawValue: COSName) {
       self.rawValue = rawValue
     }
   }
 
-  public struct SubFilter: RawRepresentable, Hashable {
+  public struct SubFilter: Codable, RawRepresentable, Hashable {
     public var rawValue: COSName
     public init(rawValue: COSName) {
       self.rawValue = rawValue
@@ -81,7 +81,7 @@ public final class PDFEncryption {
   ///   any “Security handlers of revision 3 or greater” access permissions set
   ///   to 0.
   /// - `r4`: If the document is encrypted with a **V** value of 4.
-  public enum Revision: Int, CaseIterable {
+  public enum Revision: Int, Codable, CaseIterable {
 
     /// If the document is encrypted with a **V** value less than 2
     /// (see PDF spec Table 20) and does not have any of the access permissions
@@ -130,20 +130,20 @@ public final class PDFEncryption {
   /// The **Filter** entry of the encryption dictionary.
   public var filter: Filter? {
     get {
-      return dictionary[native: .encryptionFilter]
+      return dictionary[decode: .encryptionFilter]
     }
     set {
-      dictionary[native: .encryptionFilter] = newValue
+      dictionary[decode: .encryptionFilter] = newValue
     }
   }
 
   /// The **SubFilter** entry of the encryption dictionary.
   public var subFilter: SubFilter? {
     get {
-      return dictionary[native: .encryptionSubFilter]
+      return dictionary[decode: .encryptionSubFilter]
     }
     set {
-      dictionary[native: .encryptionSubFilter] = newValue
+      dictionary[decode: .encryptionSubFilter] = newValue
     }
   }
 
@@ -154,7 +154,7 @@ public final class PDFEncryption {
                         default: .undocumentedUnsupported]
     }
     set {
-      dictionary[native: .encryptionVersion] = newValue
+      dictionary[decode: .encryptionVersion] = newValue
     }
   }
 
@@ -167,7 +167,7 @@ public final class PDFEncryption {
       return dictionary[native: .encryptionKeyLength, default: 40]
     }
     set {
-      dictionary[native: .encryptionKeyLength] = newValue
+      dictionary[decode: .encryptionKeyLength] = newValue
     }
   }
 
@@ -180,7 +180,7 @@ public final class PDFEncryption {
       return dictionary[native: .securityHandlerRevision, default: .r2]
     }
     set {
-      dictionary[native: .securityHandlerRevision] = newValue
+      dictionary[decode: .securityHandlerRevision] = newValue
     }
   }
 

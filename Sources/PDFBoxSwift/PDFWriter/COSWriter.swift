@@ -239,15 +239,15 @@ open class COSWriter: COSVisitorProtocol {
     // sort xref, needed only if object keys not regenerated
     xRefEntries.sort()
 
-    document.trailer?[native: .trailerSize] = xRefEntries.last
+    document.trailer?[decode: .trailerSize] = xRefEntries.last
       .map { $0.key.number + 1 }
 
     // Only need to stay, if an incremental update will be performed
     if !incrementalUpdate {
-      document.trailer?[native: .prev] = nil
+      document.trailer?[decode: .prev] = nil
     }
     if !document.isXRefStream {
-      document.trailer?[native: .xRefStm] = nil
+      document.trailer?[decode: .xRefStm] = nil
     }
 
     // Remove a checksum if present
@@ -269,9 +269,9 @@ open class COSWriter: COSVisitorProtocol {
     }
 
     if !document.isXRefStream || hybridPrev != -1 {
-      document.trailer?[native: .prev] = document.startXref
+      document.trailer?[decode: .prev] = document.startXref
       if hybridPrev != -1 {
-        document.trailer?[native: .xRefStm] = Int64(document.startXref)
+        document.trailer?[decode: .xRefStm] = Int64(document.startXref)
       }
       try doWriteXRefTable()
       try doWriteTrailer(for: document)
@@ -661,7 +661,7 @@ open class COSWriter: COSVisitorProtocol {
 
     try doWriteBody(document)
 
-    let hybridPrev = document.trailer?[native: .xRefStm] ?? -1
+    let hybridPrev = document.trailer?[decode: .xRefStm] ?? -1
 
     if incrementalUpdate || document.isXRefStream {
       try doWriteXRefInc(for: document, hybridPrev: hybridPrev)

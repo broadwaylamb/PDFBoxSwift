@@ -6,7 +6,7 @@
 //
 
 /// This class represents a floating point number in a PDF document.
-public final class COSFloat: COSNumber, ConvertibleToCOS, Decodable {
+public final class COSFloat: COSNumber, Decodable {
 
   private let stringValue: String
 
@@ -93,10 +93,6 @@ public final class COSFloat: COSNumber, ConvertibleToCOS, Decodable {
   /// - Throws: Any error the stream throws during writing.
   public func writePDF(_ output: OutputStream) throws {
     try output.write(utf8: stringValue)
-  }
-
-  public var cosRepresentation: COSFloat {
-    return self
   }
 
   public override var debugDescription: String {

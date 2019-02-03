@@ -21,7 +21,7 @@
 /// Byte strings are used for binary data represented as a series of bytes, but
 /// the encoding is not known. The bytes of the string need not represent
 /// characters.
-public final class COSString: COSBase, ConvertibleToCOS, Decodable {
+public final class COSString: COSBase, Decodable {
 
   public struct ParseError: Error, CustomStringConvertible {
     public let description: String
@@ -93,7 +93,7 @@ public final class COSString: COSBase, ConvertibleToCOS, Decodable {
       bytes.reserveCapacity(2 + utf16.count * 2)
       bytes.append(contentsOf: [0xFE, 0xFF]) // BOM
       bytes.append(contentsOf: utf16.flatMap {
-        [UInt8(($0 & 0xFF00) >> 8), UInt8($0 & 0xFF)]
+        [UInt8(($0.bigEndian & 0xFF00) >> 8), UInt8($0.bigEndian & 0xFF)]
       })
     }
   }
@@ -143,10 +143,6 @@ public final class COSString: COSBase, ConvertibleToCOS, Decodable {
   public override func hash(into hasher: inout Hasher) {
     hasher.combine(bytes)
     hasher.combine(forceHexForm)
-  }
-
-  public var cosRepresentation: COSString {
-    return self
   }
 
   public override var debugDescription: String {

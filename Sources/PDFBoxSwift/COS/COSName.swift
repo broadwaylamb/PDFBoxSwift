@@ -6,7 +6,7 @@
 //
 
 /// This class represents a PDF Name object.
-public final class COSName: COSBase, ConvertibleToCOS, Decodable {
+public final class COSName: COSBase, Decodable {
 
   public let name: String
 
@@ -84,10 +84,6 @@ public final class COSName: COSBase, ConvertibleToCOS, Decodable {
         try output.writeAsHex(byte)
       }
     }
-  }
-
-  public var cosRepresentation: COSName {
-    return self
   }
 
   public override var debugDescription: String {

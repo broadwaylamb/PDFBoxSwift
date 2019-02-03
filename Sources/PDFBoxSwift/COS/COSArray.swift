@@ -6,7 +6,7 @@
 //
 
 /// An array of `COSBase` objects as part of the PDF document.
-public final class COSArray: COSBase, COSUpdateInfo, ConvertibleToCOS {
+public final class COSArray: COSBase, COSUpdateInfo {
 
   private var objects: ContiguousArray<COSBase> = []
 
@@ -29,10 +29,6 @@ public final class COSArray: COSBase, COSUpdateInfo, ConvertibleToCOS {
   @discardableResult
   public override func accept(visitor: COSVisitorProtocol) throws -> Any? {
     return try visitor.visit(self)
-  }
-
-  public var cosRepresentation: COSArray {
-    return self
   }
 
   public override var debugDescription: String {

@@ -6,7 +6,7 @@
 //
 
 /// This class represents a dictionary where name/value pairs reside.
-public class COSDictionary: COSBase, COSUpdateInfo, ConvertibleToCOS {
+public class COSDictionary: COSBase, COSUpdateInfo {
 
   private static let pathSeparator = "/"
 
@@ -71,10 +71,6 @@ public class COSDictionary: COSBase, COSUpdateInfo, ConvertibleToCOS {
       }
       return false
     }?.key
-  }
-
-  public var cosRepresentation: COSDictionary {
-    return self
   }
 
   /// The collection of keys of the dictionary,
@@ -310,9 +306,9 @@ extension COSDictionary {
   /// - Parameter key: The key to the object that we are getting.
   /// - Returns: The object that matches the key.
   @inlinable // Inlinable as trivially forwarding and generic
-  public subscript<T: ConvertibleToCOS>(cos key: TypedCOSName<T>) -> T.ToCOS? {
+  public subscript<T: COSBase>(cos key: TypedCOSName<T>) -> T? {
     get {
-      return self[key.key] as? T.ToCOS
+      return self[key.key] as? T
     }
     set {
       self[key.key] = newValue
@@ -327,14 +323,14 @@ extension COSDictionary {
   /// - Parameter key: The key to the object that we are getting.
   /// - Returns: The object that matches the key.
   @inlinable // Inlinable as trivially forwarding and generic
-  public subscript<T: ConvertibleToCOS, S: ConvertibleToCOS>(
+  public subscript<T: COSBase, S: COSBase>(
     cos key: TypedCOSName<Either<T, S>>
-  ) -> Either<T.ToCOS, S.ToCOS>? {
+  ) -> Either<T, S>? {
     get {
       switch self[key.key] {
-      case let r as T.ToCOS:
+      case let r as T:
         return .left(r)
-      case let r as S.ToCOS:
+      case let r as S:
         return .right(r)
       default:
         return nil
@@ -354,41 +350,21 @@ extension COSDictionary {
   /// - Parameter key: The key to the object that we are getting.
   /// - Returns: The native value of the object that matches the key.
   @inlinable // Inlinable as trivially forwarding and generic
-  public subscript<T: ConvertibleFromCOS & ConvertibleToCOS>(
-    native key: TypedCOSName<T>
-  ) -> T? where T.ToCOS == T.FromCOS {
+  public subscript<T: Codable>(decode key: TypedCOSName<T>) -> T? {
     get {
-      return self[cos: key].map(T.init)
+      do {
+        return try self[key.key].map {
+          try COSDecoder().decode(T.self, from: $0)
+        }
+      } catch {
+        return nil
+      }
     }
     set {
-      self[cos: key] = newValue?.cosRepresentation
-    }
-  }
-
-  /// This will get an object from this dictionary as a native Swift value.
-  /// If the object is a reference then it will dereference it and get it
-  /// from the document.
-  /// If the object is `COSNull` or is not in the dictionary,
-  /// then `nil` will be returned.
-  ///
-  /// - Parameter key: The key to the object that we are getting.
-  /// - Returns: The native value of the object that matches the key.
-  @inlinable // Inlinable as trivially forwarding and generic
-  public subscript<T: ConvertibleFromCOS & ConvertibleToCOS,
-                   S: ConvertibleFromCOS & ConvertibleToCOS>(
-    native key: TypedCOSName<Either<T, S>>
-  ) -> Either<T, S>? where T.ToCOS == T.FromCOS, S.ToCOS == S.FromCOS {
-    get {
-      return self[cos: key]?.mapLeft(T.init).mapRight(S.init)
-    }
-    set {
-      switch newValue {
-      case .left(let t)?:
-        self[cos: key] = .left(t.cosRepresentation)
-      case .right(let s)?:
-        self[cos: key] = .right(s.cosRepresentation)
-      case nil:
-        self[cos: key] = nil
+      do {
+        self[key.key] = try newValue.map(COSEncoder().encode)
+      } catch {
+        self[key.key] = nil
       }
     }
   }
@@ -404,15 +380,15 @@ extension COSDictionary {
   ///   - defaultValue: The value returned if the entry is `nil`.
   /// - Returns: The object that matches the key.
   @inlinable // Inlinable as trivially forwarding and generic
-  public subscript<T: ConvertibleFromCOS & ConvertibleToCOS>(
+  public subscript<T: Codable>(
     native key: TypedCOSName<T>,
     default defaultValue: @autoclosure () ->  T
-  ) -> T where T.ToCOS == T.FromCOS {
+  ) -> T {
     get {
-      return self[native: key] ?? defaultValue()
+      return self[decode: key] ?? defaultValue()
     }
     set {
-      self[native: key] = newValue
+      self[decode: key] = newValue
     }
   }
 
@@ -432,13 +408,12 @@ extension COSDictionary {
   ///   - defaultValue: The value returned if the entry is `nil`.
   /// - Returns: The object that matches the key.
   @inlinable // Inlinable as trivially forwarding and generic
-  public subscript<T: ConvertibleFromCOS & ConvertibleToCOS>(
+  public subscript<T: Codable>(
     native firstKey: TypedCOSName<T>,
     secondKey: TypedCOSName<T>,
     default defaultValue: @autoclosure () ->  T
-  ) -> T where T.ToCOS == T.FromCOS {
-
-    return self[native: firstKey] ?? self[native: secondKey] ?? defaultValue()
+  ) -> T {
+    return self[decode: firstKey] ?? self[decode: secondKey] ?? defaultValue()
   }
 
   /// This is a special case of subscript that takes two keys,
@@ -456,10 +431,10 @@ extension COSDictionary {
   ///   - secondKey: The second key to the item in the dictionary.
   /// - Returns: The object that matches the key.
   @inlinable // Inlinable as trivially forwarding and generic
-  public subscript<T: ConvertibleToCOS>(
+  public subscript<T: COSBase>(
     cos firstKey: TypedCOSName<T>,
     secondKey: TypedCOSName<T>
-  ) -> T.ToCOS? {
+  ) -> T? {
     return self[cos: firstKey] ?? self[cos: secondKey]
   }
 
@@ -478,10 +453,10 @@ extension COSDictionary {
   ///   - secondKey: The second key to the item in the dictionary.
   /// - Returns: The object that matches the key.
   @inlinable // Inlinable as trivially forwarding and generic
-  public subscript<T: ConvertibleToCOS, S: ConvertibleToCOS>(
+  public subscript<T: COSBase, S: COSBase>(
     cos firstKey: TypedCOSName<Either<T, S>>,
     secondKey: TypedCOSName<Either<T, S>>
-  ) -> Either<T.ToCOS, S.ToCOS>? {
+  ) -> Either<T, S>? {
       return self[cos: firstKey] ?? self[cos: secondKey]
   }
 
@@ -496,13 +471,13 @@ extension COSDictionary {
   @inlinable // Inlinable as trivially forwarding and generic
   public subscript<T: OptionSet>(
     native key: TypedCOSName<T>
-  ) -> T where T.RawValue == Int32, T.Element == T {
+  ) -> T where T.RawValue: Codable {
     get {
-      let intValue = self[native: TypedCOSName<Int32>(key: key.key), default: 0]
-      return T(rawValue: intValue)
+      return self[decode: TypedCOSName<T.RawValue>(key: key.key)]
+        .map(T.init) ?? T()
     }
     set {
-      self[native: TypedCOSName<Int32>(key: key.key)] = newValue.rawValue
+      self[decode: TypedCOSName<T.RawValue>(key: key.key)] = newValue.rawValue
     }
   }
 
@@ -520,8 +495,8 @@ extension COSDictionary {
   @inlinable // Inlinable as trivially forwarding and generic
   public subscript<T: OptionSet>(
     native key: TypedCOSName<T>,
-    flag flag: T
-  ) -> Bool where T.RawValue == Int32, T.Element == T {
+    flag flag: T.Element
+  ) -> Bool where T.RawValue: Codable, T.Element == T {
     get {
       return self[native: key].contains(flag)
     }

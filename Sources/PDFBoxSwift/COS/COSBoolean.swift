@@ -6,7 +6,7 @@
 //
 
 /// This class represents a boolean value in the PDF document.
-public final class COSBoolean: COSBase, ConvertibleToCOS, Decodable {
+public final class COSBoolean: COSBase, Decodable {
 
   /// The "true" boolean token.
   private static let trueBytes: [UInt8] = Array("true".utf8)
@@ -61,10 +61,6 @@ public final class COSBoolean: COSBase, ConvertibleToCOS, Decodable {
     } else {
       try output.write(bytes: COSBoolean.falseBytes )
     }
-  }
-
-  public var cosRepresentation: COSBoolean {
-    return self
   }
 
   public override var debugDescription: String {
